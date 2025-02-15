@@ -58,8 +58,8 @@
     }
 
     .btn-start {
-        background: #2196F3;
-        color: white;
+        background: #ffc107;  /* Colore Charlie */
+        color: black;
     }
 
     .btn-stop {
@@ -68,14 +68,14 @@
     }
 
     .btn-next {
-        background: #4CAF50;
-        color: white;
+        background: #ffc107;  /* Colore Charlie */
+        color: black;
         width: 100%;
         margin-bottom: 1rem;
     }
 
     .btn-start:hover:not(:disabled) {
-        background: #1976D2;
+        background: #e0a800;
     }
 
     .btn-stop:hover:not(:disabled) {
@@ -83,7 +83,7 @@
     }
 
     .btn-next:hover:not(:disabled) {
-        background: #45a049;
+        background: #e0a800;
     }
 
     .status {
@@ -95,7 +95,7 @@
 {% endblock %}
 
 {% block content %}
-<h1>Controllo Singolo</h1>
+<h1>Controllo CHARLIE</h1>
 
 <div class="game-info">
     <div class="current-player">
@@ -111,8 +111,11 @@
         Prossimo Giocatore
     </button>
     <div class="button-group">
-        <button id="start-btn" class="btn btn-start" onclick="pressButton('second_start')">START</button>
-        <button id="stop-btn" class="btn btn-stop" onclick="pressButton('second_stop')">STOP</button>
+        <button id="start-btn" class="btn btn-start" onclick="pressButton('charlie_start')">START</button>
+        <button id="stop-btn" class="btn btn-stop" onclick="pressButton('charlie_stop')">STOP</button>
+    </div>
+    <div class="status">
+        Stato: <span id="status">Inattivo</span>
     </div>
 </div>
 {% endblock %}
@@ -131,8 +134,8 @@
         fetch('/simulate')
             .then(response => response.json())
             .then(data => {
-                if (data.singles && data.singles.length > 0) {
-                    const playerId = data.singles[0][1];  // Ora sarà nel formato BLU-XX
+                if (data.charlie && data.charlie.length > 0) {
+                    const playerId = data.charlie[0][1];  // Ora sarà nel formato VERDE-XX
                     $('#current-player').text(playerId);
                     $('#next-player-btn').prop('disabled', false);
                 } else {
@@ -143,13 +146,13 @@
     }
 
     function updateAvailability() {
-        $.get('/check_availability', function(data) {
-            const canStart = data.can_start_single;
+        $.get('/get_status', function(data) {
+            const canStart = data.charlie_status === 'Libera';
             $('#start-btn').prop('disabled', !canStart);
-            $('#status').text(`ALFA: ${data.alfa_status} - BRAVO: ${data.bravo_status}`);
+            $('#status').text(data.charlie_status + ' - ' + data.charlie_remaining);
             
             if (!canStart) {
-                $('#start-btn').attr('title', 'Attendere che la pista ALFA sia libera');
+                $('#start-btn').attr('title', 'Attendere che la pista CHARLIE sia libera');
             } else {
                 $('#start-btn').attr('title', '');
             }
@@ -171,7 +174,7 @@
         $('#stop-btn').prop('disabled', false);
         $('#timer').text('00:00');
         $('#current-player').text('-');
-        updateAvailability(); // Verifica disponibilità piste
+        updateAvailability();
     }
 
     function pressButton(button) {
@@ -186,14 +189,14 @@
                     return;
                 }
                 
-                if (button === 'second_start') {
+                if (button === 'charlie_start') {
                     startTime = new Date();
                     isGameActive = true;
                     timerInterval = setInterval(updateTimer, 1000);
                     $('#next-player-btn').prop('disabled', true);
                     $('#start-btn').prop('disabled', true);
                     $('#stop-btn').prop('disabled', false);
-                } else if (button === 'second_stop') {
+                } else if (button === 'charlie_stop') {
                     isGameActive = false;
                     clearInterval(timerInterval);
                     $('#next-player-btn').prop('disabled', false);
@@ -205,10 +208,16 @@
         });
     }
 
+    function updateStatus() {
+        $.get('/get_status', function(data) {
+            $('#status').text(data.charlie_status + ' - ' + data.charlie_remaining);
+        });
+    }
+
     function skipPlayer() {
         const currentPlayer = $('#current-player').text();
         if (currentPlayer !== '-') {
-            fetch('/skip_player', {
+            fetch('/skip_charlie_player', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -221,9 +230,9 @@
                 fetch('/simulate')
                     .then(response => response.json())
                     .then(data => {
-                        // Cerca il prossimo giocatore di tipo singolo (blu)
-                        if (data.singles && data.singles.length > 0) {
-                            $('#current-player').text(data.singles[0][1]);
+                        // Cerca il prossimo giocatore di tipo charlie (verde)
+                        if (data.charlie && data.charlie.length > 0) {
+                            $('#current-player').text(data.charlie[0][1]);
                             $('#next-player-btn').prop('disabled', false);
                         } //else {
                         //     $('#current-player').text('-');
@@ -234,8 +243,12 @@
         }
     }
 
-    // setInterval(updateAvailability, 1000);
+    // Aggiorna lo stato ogni secondo
+    setInterval(updateStatus, 1000);
+    //setInterval(updateAvailability, 1000);
+    
     $(document).ready(function() {
+        updateStatus();
         updateAvailability();
     });
 </script>

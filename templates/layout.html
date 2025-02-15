@@ -62,10 +62,11 @@
 <body>
     <nav class="navbar">
         <div class="nav-links">
-            <a href="{{ url_for('controls_couple') }}">Controllo Coppia</a>
-            <a href="{{ url_for('controls_single') }}">Controllo Singolo</a>
-            <a href="{{ url_for('keypad') }}">Tastierino</a>
-            <a href="{{ url_for('dashboard') }}">Tabellone</a>
+            <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+            <a href="{{ url_for('controls_couple') }}" class="nav-link">Controllo Coppia</a>
+            <a href="{{ url_for('controls_single') }}" class="nav-link">Controllo Singolo</a>
+            <a href="{{ url_for('controls_charlie') }}" class="nav-link">Controllo Charlie</a>
+            <a href="{{ url_for('keypad') }}" class="nav-link">Tastierino</a>
         </div>
     </nav>
     
