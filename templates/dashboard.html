@@ -1,0 +1,336 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    .status-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .status-box {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        width: 250px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .status-box.occupied {
+        background: #ffebee;
+        border-left: 5px solid #ef5350;
+    }
+
+    .status-box.free {
+        background: #e8f5e9;
+        border-left: 5px solid #66bb6a;
+    }
+
+    .boards-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+    }
+
+    .board {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        width: 300px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .board h2 {
+        color: #1a237e;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .board ul {
+        list-style: none;
+    }
+
+    .board li {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 1.1em;
+    }
+
+    .board li:last-child {
+        border-bottom: none;
+    }
+
+    .next-player-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 30px auto;
+        max-width: 600px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .next-player-card.highlight {
+        background: #e8f5e9;
+        border: 2px solid #66bb6a;
+        transform: scale(1.02);
+    }
+
+    .next-player-title {
+        color: #1a237e;
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+
+    .next-player-id {
+        font-size: 2.5em;
+        font-weight: bold;
+        color: #2e7d32;
+        margin: 15px 0;
+    }
+
+    .next-player-time {
+        font-size: 1.3em;
+        color: #666;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .skip-button {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 5px 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s;
+    }
+
+    .skip-button:hover {
+        background: #f5f5f5;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .skip-icon {
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .skipped-section {
+        margin: 20px auto;
+        max-width: 800px;
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .skipped-title {
+        color: #1a237e;
+        font-size: 1.2em;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .skipped-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .skipped-item {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .skipped-item:hover {
+        background: #e0e0e0;
+        transform: scale(1.05);
+    }
+
+    .skipped-item.couple {
+        border-left: 4px solid #2196F3;
+    }
+
+    .skipped-item.single {
+        border-left: 4px solid #4CAF50;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Tabellone</h1>
+
+<div class="status-container">
+    <div class="status-box" id="alfa-status">
+        <h3>Pista ALFA</h3>
+        <p>Stato: <span id="alfa-state">-</span></p>
+        <p>Tempo rimanente: <span id="alfa-remaining">-</span></p>
+    </div>
+    
+    <div class="status-box" id="bravo-status">
+        <h3>Pista BRAVO</h3>
+        <p>Stato: <span id="bravo-state">-</span></p>
+        <p>Tempo rimanente: <span id="bravo-remaining">-</span></p>
+    </div>
+</div>
+
+<div class="next-player-card hidden" id="next-player-notification">
+    <div class="next-player-title">Prossimo Ingresso:</div>
+    <div class="next-player-id" id="next-player-id"></div>
+    <div class="next-player-time">Preparati all'ingresso!</div>
+    <button class="skip-button" onclick="skipNextPlayer()">
+        SKIP <span class="skip-icon">>></span>
+    </button>
+</div>
+
+<div class="boards-container">
+    <div class="board">
+        <h2>Tabellone Coppie</h2>
+        <ul id="couples-board"></ul>
+    </div>
+
+    <div class="board">
+        <h2>Tabellone Singoli</h2>
+        <ul id="singles-board"></ul>
+    </div>
+</div>
+
+<div class="skipped-section">
+    <div class="skipped-title">Giocatori Saltati</div>
+    <div class="skipped-list" id="skipped-list">
+        <!-- Populated by JavaScript -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function formatTimeRome(date) {
+        if (!date) return 'N/D';
+        
+        // Crea un formatter per l'ora di Roma
+        const options = {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: 'Europe/Rome'
+        };
+        
+        return new Date(date).toLocaleTimeString('it-IT', options);
+    }
+
+    function updateStatus() {
+        $.get('/get_status', function(data) {
+            $('#alfa-state').text(data.alfa_status);
+            $('#bravo-state').text(data.bravo_status);
+            $('#alfa-remaining').text(data.alfa_remaining);
+            $('#bravo-remaining').text(data.bravo_remaining);
+            
+            $('#alfa-status').removeClass('occupied free')
+                .addClass(data.alfa_status === 'Occupata' ? 'occupied' : 'free');
+            $('#bravo-status').removeClass('occupied free')
+                .addClass(data.bravo_status === 'Occupata' ? 'occupied' : 'free');
+        });
+    }
+
+    function updateBoards() {
+        $.get('/simulate', function(data) {
+            $('#couples-board').empty();
+            $('#singles-board').empty();
+
+            // Aggiorna i tabelloni
+            data.couples.forEach(function(item) {
+                let timeDisplay = item[2] === "PROSSIMO INGRESSO" ? 
+                    "PROSSIMO INGRESSO" : 
+                    formatTimeRome(item[2]);
+                $('#couples-board').append(`<li>${item[1]} - Ingresso: ${timeDisplay}</li>`);
+            });
+
+            data.singles.forEach(function(item) {
+                let timeDisplay = item[2] === "PROSSIMO INGRESSO" ? 
+                    "PROSSIMO INGRESSO" : 
+                    formatTimeRome(item[2]);
+                $('#singles-board').append(`<li>${item[1]} - Ingresso: ${timeDisplay}</li>`);
+            });
+
+            // Gestisci la notifica del prossimo giocatore
+            if (data.next_player) {
+                $('#next-player-notification').removeClass('hidden').addClass('highlight');
+                $('#next-player-id').text(data.next_player);
+            } else {
+                $('#next-player-notification').addClass('hidden').removeClass('highlight');
+            }
+        });
+    }
+
+    function skipNextPlayer() {
+        $.post('/skip_next_player', function(response) {
+            if (response.success) {
+                updateBoards();
+            }
+        });
+    }
+
+    function updateSkippedList() {
+        $.get('/get_skipped', function(data) {
+            const skippedList = $('#skipped-list');
+            skippedList.empty();
+            
+            data.couples.forEach(function(couple) {
+                skippedList.append(`
+                    <div class="skipped-item couple" onclick="restoreSkipped('${couple.id}')">
+                        ${couple.id}
+                    </div>
+                `);
+            });
+            
+            data.singles.forEach(function(single) {
+                skippedList.append(`
+                    <div class="skipped-item single" onclick="restoreSkipped('${single.id}')">
+                        ${single.id}
+                    </div>
+                `);
+            });
+        });
+    }
+
+    function restoreSkipped(playerId) {
+        $.ajax({
+            url: '/restore_skipped',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({id: playerId}),
+            success: function() {
+                updateSkippedList();
+                updateBoards();
+            }
+        });
+    }
+
+    setInterval(updateStatus, 1000);
+    setInterval(updateBoards, 1000);
+    setInterval(updateSkippedList, 1000);
+    
+    $(document).ready(function() {
+        updateStatus();
+        updateBoards();
+        updateSkippedList();
+    });
+</script>
+{% endblock %} 
