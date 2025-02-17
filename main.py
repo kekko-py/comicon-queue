@@ -340,6 +340,7 @@ class GameBackend:
     def button_third_pressed(self):
         """Gestisce la pressione del pulsante metà percorso"""
         self.couple_in_bravo = True
+        self.single_in_alfa = False
         self.third_button_pressed = True
         self.ALFA_next_available = self.get_current_time()
 

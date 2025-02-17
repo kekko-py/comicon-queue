@@ -119,8 +119,8 @@ def get_status():
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
     
     return jsonify({
-        'alfa_status': 'Occupata' if alfa_remaining > 0 else 'Libera',
-        'bravo_status': 'Occupata' if bravo_remaining > 0 else 'Libera',
+        'alfa_status': 'Occupata' if backend.single_in_alfa else 'Libera',
+        'bravo_status': 'Occupata' if (backend.couple_in_bravo or backend.single_in_alfa) else 'Libera',
         'charlie_status': 'Occupata' if charlie_remaining > 0 else 'Libera',
         'alfa_remaining': f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
         'bravo_remaining': f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
@@ -133,9 +133,13 @@ def button_press():
     now = backend.get_current_time()
     
     if button == 'first_start':
+        if backend.single_in_alfa:
+            return jsonify(success=False, error="Non è possibile avviare il gioco di coppia mentre ALFA è occupata da un singolo.")
         # Avvio game coppia
         backend.ALFA_next_available = now + datetime.timedelta(minutes=backend.T_mid)
         backend.BRAVO_next_available = now + datetime.timedelta(minutes=backend.T_total)
+        backend.couple_in_bravo = True
+        backend.single_in_alfa = True
         backend.start_game(is_couple=True)
         return jsonify(success=True)
     elif button == 'first_stop':
