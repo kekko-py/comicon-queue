@@ -84,6 +84,7 @@ class GameBackend:
         """
         self.single_history.append(game_time)
         self.update_averages()
+        self.single_in_alfa = False 
 
     def record_charlie_game(self, game_time):
         """

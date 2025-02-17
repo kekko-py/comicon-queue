@@ -1,61 +1,7 @@
 {% extends "layout.html" %}
 
 {% block extra_css %}
-<style>
-    .keypad-container {
-        background: white;
-        border-radius: 10px;
-        padding: 2rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    .keypad-display {
-        width: 100%;
-        padding: 1rem;
-        text-align: center;
-        margin-bottom: 1rem;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 1.5em;
-        letter-spacing: 5px;
-    }
-
-    .keypad {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        max-width: 300px;
-        margin: 0 auto;
-    }
-
-    .key {
-        background: #e3f2fd;
-        border: none;
-        padding: 1.5rem;
-        font-size: 1.5em;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .key:hover {
-        background: #bbdefb;
-    }
-
-    .key:active {
-        transform: scale(0.95);
-    }
-
-    .key.clear {
-        background: #ffcdd2;
-    }
-
-    .key.enter {
-        background: #c8e6c9;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/keypad.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -81,40 +27,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-    let keypadInput = '';
-    
-    function addKey(key) {
-        if (keypadInput.length < 4) {
-            keypadInput += key;
-            updateKeypadDisplay();
-        }
-    }
-
-    function clearKey() {
-        keypadInput = '';
-        updateKeypadDisplay();
-    }
-
-    function updateKeypadDisplay() {
-        document.getElementById('keypad-display').value = '*'.repeat(keypadInput.length);
-    }
-
-    function checkCode() {
-        if (keypadInput === '1234') {
-            $.ajax({
-                url: '/button_press',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({button: 'third'}),
-                success: function() {
-                    alert('Codice corretto - Metà percorso attivato');
-                }
-            });
-        } else {
-            alert('Codice non valido');
-        }
-        clearKey();
-    }
-</script>
-{% endblock %} 
+<script src="{{ url_for('static', filename='js/keypad.js') }}"></script>
+{% endblock %}

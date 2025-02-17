@@ -103,7 +103,8 @@ def simulate():
         singles=singles_board,
         charlie=formatted_charlie_board,
         next_player=next_player,
-        next_charlie_player=next_charlie_player
+        next_charlie_player=next_charlie_player,
+       player_icon_url=url_for('static', filename='icons/Vector.svg')
     )
 
 @app.route('/get_status', methods=['GET'])
@@ -153,6 +154,7 @@ def button_press():
     elif button == 'second_start':
         # Avvio game singolo
         backend.ALFA_next_available = now + datetime.timedelta(minutes=backend.T_single)
+        backend.single_in_alfa = True
         backend.start_game(is_couple=False)
     elif button == 'second_stop':
         # Fine game singolo
