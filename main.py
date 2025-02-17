@@ -4,6 +4,7 @@ import pytz
 
 class GameBackend:
     def __init__(self):
+
         # Code: ogni elemento è un dizionario con "id" e "arrival" (orario d'arrivo)
         self.queue_couples = []  # Es. [{'id': 'GIALLO-01', 'arrival': datetime}, ...]
         self.queue_singles = []  # Es. [{'id': 'BLU-01', 'arrival': datetime}, ...]
@@ -65,6 +66,53 @@ class GameBackend:
             self.add_single(single_id)
             self.add_charlie_player(charlie_id)
 
+    def record_couple_game(self, mid_time, total_time):
+        """
+        Registra i tempi (in minuti) relativi a un game coppia:
+          - mid_time: tempo dal Pulsante 1 all'attivazione del Pulsante 3
+          - total_time: tempo totale dal Pulsante 1 (avvio) allo stop (liberazione di BRAVO)
+        Dopo la registrazione, aggiorna i tempi medi.
+        """
+        self.couple_history_mid.append(mid_time)
+        self.couple_history_total.append(total_time)
+        self.update_averages()
+
+    def record_single_game(self, game_time):
+        """
+        Registra il tempo (in minuti) relativo a un game singolo (durata in cui ALFA è occupata).
+        Dopo la registrazione, aggiorna i tempi medi.
+        """
+        self.single_history.append(game_time)
+        self.update_averages()
+
+    def record_charlie_game(self, game_time):
+        """
+        Registra il tempo (in minuti) relativo a un game charlie.
+        Dopo la registrazione, aggiorna i tempi medi.
+        """
+        self.charlie_history.append(game_time)
+        self.update_averages()
+        
+    def format_time(self, time_in_minutes):
+        """Formatta il tempo in minuti e secondi"""
+        minutes = int(time_in_minutes)
+        seconds = int((time_in_minutes - minutes) * 60)
+        return f"{minutes}m {seconds}s"
+
+    def get_leaderboard(self):
+        """
+        Restituisce la classifica dei giocatori in base ai tempi medi di gioco.
+        """
+        couple_avg_times = [(f"COMPLETATO-{i+1}", self.format_time(time)) for i, time in enumerate(self.couple_history_total)]
+        single_avg_times = [(f"COMPLETATO-{i+1}", self.format_time(time)) for i, time in enumerate(self.single_history)]
+        charlie_avg_times = [(f"COMPLETATO-{i+1}", self.format_time(time)) for i, time in enumerate(self.charlie_history)]
+
+        return {
+            'couples': couple_avg_times,
+            'singles': single_avg_times,
+            'charlie': charlie_avg_times
+        }
+
     def get_current_time(self):
         """Ottiene l'ora corrente nel fuso orario di Roma"""
         return datetime.datetime.now(self.rome_tz)
@@ -74,6 +122,8 @@ class GameBackend:
         if dt.tzinfo is None:
             return self.rome_tz.localize(dt)
         return dt
+    
+    
 
     def update_averages(self):
         """
@@ -383,6 +433,7 @@ class GameBackend:
 
 if __name__ == '__main__':
     backend = GameBackend()
+    
 
     # Aggiungiamo alcune coppie e alcuni singoli in coda
     backend.add_couple("GIALLO-01")
@@ -402,15 +453,15 @@ if __name__ == '__main__':
 
     print("Tabellone Coppie (Gialli):")
     for pos, cid, time_est in couples_board:
-        time_str = time_est.strftime('%H:%M:%S') if time_est else 'N/D'
-        print(f"{pos}. {cid} - Ingresso stimato: {time_str}")
+      time_str = time_est.strftime('%H:%M:%S') if isinstance(time_est, datetime.datetime) else time_est if time_est else 'N/D'
+    print(f"{pos}. {cid} - Ingresso stimato: {time_str}")
 
     print("\nTabellone Singoli (Blu):")
     for pos, sid, time_est in singles_board:
-        time_str = time_est.strftime('%H:%M:%S') if time_est else 'N/D'
-        print(f"{pos}. {sid} - Ingresso stimato: {time_str}")
+      time_str = time_est.strftime('%H:%M:%S') if isinstance(time_est, datetime.datetime) else time_est if time_est else 'N/D'
+    print(f"{pos}. {cid} - Ingresso stimato: {time_str}")
 
     print("\nTabellone Charlie (Verde):")
     for pos, cid, time_est in charlie_board:
-        time_str = time_est.strftime('%H:%M:%S') if time_est else 'N/D'
-        print(f"{pos}. {cid} - Ingresso stimato: {time_str}")
+       time_str = time_est.strftime('%H:%M:%S') if isinstance(time_est, datetime.datetime) else time_est if time_est else 'N/D'
+    print(f"{pos}. {cid} - Ingresso stimato: {time_str}")
