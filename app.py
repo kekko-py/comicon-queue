@@ -236,6 +236,8 @@ def check_availability():
     # Verifica disponibilità ALFA e BRAVO
     alfa_available = (backend.ALFA_next_available - now).total_seconds() <= 0
     bravo_available = (backend.BRAVO_next_available - now).total_seconds() <= 0
+    # alfa_available = (backend.single_in_alfa == False )
+    # bravo_available = (backend.couple_in_bravo == False and backend.single_in_alfa == False)
     
     return jsonify({
         'can_start_couple': alfa_available and bravo_available,  # Coppia ha bisogno di entrambe le piste

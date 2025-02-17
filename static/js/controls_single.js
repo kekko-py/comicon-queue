@@ -79,7 +79,7 @@ function pressButton(button) {
                 $('#start-btn, #stop-btn').prop('disabled', true);
             }
             
-            // updateAvailability();
+            updateAvailability();
         }
     });
 }
@@ -113,7 +113,10 @@ function skipPlayer() {
     }
 }
 
-// setInterval(updateAvailability, 1000);
+setInterval(updateAvailability, 1000);
 $(document).ready(function() {
-    updateAvailability();
+    $.get('/check_availability', function(data) {
+        isGameActive = data.alfa_status === 'Occupata' || data.bravo_status === 'Occupata';
+        updateAvailability();
+    });
 });
