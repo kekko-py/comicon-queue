@@ -7,18 +7,16 @@ function updateNextPlayer() {
         .then(response => response.json())
         .then(data => {
             if (data.couples && data.couples.length > 0) {
-
                 const nextPlayer = data.couples[0];  // Ora sarà un oggetto con id e name
-                //next player name and id
-                $('#next-player').text([nextPlayer.name + ' - ' + nextPlayer.id]);
+                $('#next-player').text(`${nextPlayer.name} - ${nextPlayer.id}`);
                 $('#next-player-btn').prop('disabled', false);
                 console.log(`Next player to start: ${nextPlayer.name}`);  // Log del prossimo giocatore
             } else {
                 $('#next-player').text('-');
                 $('#next-player-btn').prop('disabled', true);
             }
-            if (data.current_player_name) {
-                $('#current-player').text(data.current_player_name + ' - ' + data.current_player_id);
+            if (data.current_player_bravo) {
+                $('#current-player').text(`${data.current_player_bravo.name} - ${data.current_player_bravo.id}`);
             } else {
                 $('#current-player').text('-');
             }
@@ -75,13 +73,16 @@ function pressButton(button) {
                 $('#next-player-btn').prop('disabled', true);
                 $('#start-btn').prop('disabled', true);
                 $('#stop-btn').prop('disabled', false);
-                $('#current-player').text(response.current_player.name); // Aggiorna il giocatore corrente
+                $('#current-player').text(response.current_player_bravo.name); // Aggiorna il giocatore corrente
             } else if (button === 'first_stop' && isGameActive) {
                 isGameActive = false;
                 clearInterval(timerInterval);
                 $('#next-player-btn').prop('disabled', false);
                 $('#start-btn, #stop-btn').prop('disabled', true);
                 $('#current-player').text('-'); // Resetta il giocatore corrente
+            } else if (button === 'third') {
+                // Aggiorna lo stato della UI se necessario
+                console.log("Third button pressed, couple_in_alfa should be false now.");
             }
 
             updateNextPlayer();

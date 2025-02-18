@@ -35,4 +35,39 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/controls_single.js') }}"></script>
+<script>
+    function pressButton(button) {
+        $.ajax({
+            url: '/button_press',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ button: button }),
+            success: function (response) {
+                if (!response.success) {
+                    alert(response.error);
+                    return;
+                }
+
+                if (button === 'second_start') {
+                    startTime = new Date();
+                    isGameActive = true;
+                    timerInterval = setInterval(updateTimer, 1000);
+                    $('#next-player-btn').prop('disabled', true);
+                    $('#start-btn').prop('disabled', true);
+                    $('#stop-btn').prop('disabled', false);
+                    $('#current-player').text(response.current_player.name); // Aggiorna il giocatore corrente
+                } else if (button === 'second_stop' && isGameActive) {
+                    isGameActive = false;
+                    clearInterval(timerInterval);
+                    $('#next-player-btn').prop('disabled', false);
+                    $('#start-btn, #stop-btn').prop('disabled', true);
+                    $('#current-player').text('-'); // Resetta il giocatore corrente
+                }
+
+                updateNextPlayer();
+                updateAvailability();
+            }
+        });
+    }
+</script>
 {% endblock %}

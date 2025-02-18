@@ -103,7 +103,10 @@ class GameBackend:
         """
         self.single_history.append(game_time)
         self.update_averages()
-        self.single_in_alfa = False 
+        self.current_player_alfa = None 
+        self.next_player_id= self.queue_couples[0]['id'] if self.queue_couples else self.queue_singles[0]['id'] if self.queue_singles else None
+        self.next_player_name = self.get_player_name(self.next_player_id)
+
 
     def record_charlie_game(self, game_time):
         """
@@ -180,14 +183,26 @@ class GameBackend:
     # Altri metodi...
 
     def start_game(self, is_couple):
+        now = self.get_current_time()
         if is_couple:
             if self.queue_couples:
-                self.current_player_alfa = self.queue_couples.pop(0)
-                self.current_player_bravo = self.current_player_alfa
+                self.current_player_couple = self.queue_couples.pop(0)
+                self.ALFA_next_available = now + datetime.timedelta(minutes=self.T_mid)
+                self.BRAVO_next_available = now + datetime.timedelta(minutes=self.T_total)
+                self.current_player_alfa = self.current_player_couple
+                self.current_player_bravo = self.current_player_couple
+                self.couple_in_alfa = True
+                self.couple_in_bravo = True
+            else:
+                raise ValueError("No couples in queue to start the game.")
         else:
             if self.queue_singles:
-                self.current_player_alfa = self.queue_singles.pop(0)
-
+                self.current_player_single = self.queue_singles.pop(0)
+                self.ALFA_next_available = now + datetime.timedelta(minutes=self.T_single)
+                self.current_player_alfa = self.current_player_single
+                self.single_in_alfa = True
+            else:
+                raise ValueError("No singles in queue to start the game.")
 
     def simulate_schedule(self):
         """
@@ -331,26 +346,10 @@ class GameBackend:
         return couples_board, singles_board, charlie_board
 
 
-    def start_game(self, is_couple=True):
-        """Avvia un nuovo game e rimuove il giocatore dalla coda"""
-        if is_couple:
-            if self.queue_couples:
-                self.current_player_couple = self.queue_couples.pop(0)
-                self.next_player_id = self.queue_couples[0]['id'] if self.queue_couples else None
-                self.couple_in_alfa = True
-                self.couple_in_bravo = True
-        else:
-            if self.queue_singles:
-                self.current_player_single = self.queue_singles.pop(0)
-                self.next_player_id = self.queue_singles[0]['id'] if self.queue_singles else None
-                self.single_in_alfa = True
-
     def button_third_pressed(self):
         """Gestisce la pressione del pulsante metà percorso"""
-        self.couple_in_bravo = True
-        self.couple_in_alfa = False
-        self.current_player_alfa = None
         self.third_button_pressed = True
+        self.couple_in_alfa = False
         self.next_player_id = self.queue_singles[0]['id'] if self.queue_singles else self.queue_couples[0]['id'] if self.queue_couples else None
         self.next_player_name = self.get_player_name(self.next_player_id)
         self.ALFA_next_available = self.get_current_time()
