@@ -9,7 +9,10 @@
 
 <div class="game-info">
     <div class="current-player">
-        Prossimo Giocatore: <span id="current-player">-</span>
+        Prenotazione in gioco: <span id="current-player">-</span>
+    </div>
+    <div class="next-player">
+        Prossimo giocatore: <span id="next-player">-</span>
     </div>
     <div class="game-timer">
         Tempo trascorso: <span id="timer">00:00</span>
@@ -23,6 +26,9 @@
     <div class="button-group">
         <button id="start-btn" class="btn btn-start" onclick="pressButton('second_start')">START</button>
         <button id="stop-btn" class="btn btn-stop" onclick="pressButton('second_stop')">STOP</button>
+    </div>
+    <div class="status">
+        Stato: <span id="status">Inattivo</span>
     </div>
 </div>
 {% endblock %}

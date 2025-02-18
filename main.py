@@ -93,6 +93,7 @@ class GameBackend:
         """
         self.couple_history_mid.append(mid_time)
         self.couple_history_total.append(total_time)
+        self.couple_in_bravo = False
         self.update_averages()
 
     def record_single_game(self, game_time):
