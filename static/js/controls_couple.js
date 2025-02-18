@@ -3,28 +3,24 @@ let startTime;
 let isGameActive = false;
 
 function updateNextPlayer() {
-
-
     fetch('/simulate')
         .then(response => response.json())
         .then(data => {
-            if (data.couples && data.couples.length > 0 || data.current_player) {
-                if (data.couples && data.couples.length > 0) {
-                    const playerId = data.couples[0][1];  // Ora sarà nel formato GIALLO-XX
-                    $('#next-player').text(playerId);
-                    $('#next-player-btn').prop('disabled', false);
-                    console.log(`Next player to start: ${playerId}`);  // Log del prossimo giocatore
-                } else {
-                    $('#next-player').text('-');
-                    $('#next-player-btn').prop('disabled', true);
-                }
-                const playerId = data.current_player.id;  // Ora sarà nel formato GIALLO-XX
-                $('#current-player').text(playerId);
+            if (data.couples && data.couples.length > 0) {
+
+                const nextPlayer = data.couples[0];  // Ora sarà un oggetto con id e name
+                //next player name and id
+                $('#next-player').text([nextPlayer.name + ' - ' + nextPlayer.id]);
                 $('#next-player-btn').prop('disabled', false);
-                console.log(`Next player to start: ${playerId}`);  // Log del prossimo giocatore
+                console.log(`Next player to start: ${nextPlayer.name}`);  // Log del prossimo giocatore
+            } else {
+                $('#next-player').text('-');
+                $('#next-player-btn').prop('disabled', true);
+            }
+            if (data.current_player_name) {
+                $('#current-player').text(data.current_player_name + ' - ' + data.current_player_id);
             } else {
                 $('#current-player').text('-');
-                $('#next-player-btn').prop('disabled', true);
             }
         });
 }
@@ -40,7 +36,6 @@ function updateAvailability() {
         } else {
             $('#start-btn').attr('title', '');
         }
-        updateNextPlayer();
     });
 }
 
@@ -89,6 +84,7 @@ function pressButton(button) {
                 $('#current-player').text('-'); // Resetta il giocatore corrente
             }
 
+            updateNextPlayer();
             updateAvailability();
         }
     });
@@ -107,19 +103,7 @@ function skipPlayer() {
             .then(response => response.json())
             .then(() => {
                 // Dopo lo skip, aggiorna immediatamente per mostrare il prossimo giocatore dello stesso tipo
-                fetch('/simulate')
-                    .then(response => response.json())
-                    .then(data => {
-
-                        // Cerca il prossimo giocatore di tipo singolo (blu)
-                        if (data.couples && data.couples.length > 0) {
-                            $('#current-player').text(data.couples[0][1]);
-                            $('#next-player-btn').prop('disabled', false);
-                        } else {
-                            $('#current-player').text('-');
-                            $('#next-player-btn').prop('disabled', true);
-                        }
-                    });
+                updateNextPlayer();
             });
     }
 }
@@ -130,7 +114,7 @@ setInterval(() => {
     updateNextPlayer();
 }, 1000);
 
-
 $(document).ready(function () {
     updateAvailability();
+    updateNextPlayer();
 });

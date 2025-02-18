@@ -40,12 +40,20 @@
         event.preventDefault();
         const playerType = document.getElementById('playerType').value;
         const playerId = document.getElementById('playerId').value;
+        let playerName = '';
+
+        if (playerType === 'couple') {
+            playerName = 'GIALLO';
+        } else if (playerType === 'single') {
+            playerName = 'BLU';
+        }
+
         fetch(`/add_${playerType}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ id: playerId })
+            body: JSON.stringify({ id: playerId, name: playerName })
         })
             .then(response => response.json())
             .then(data => {

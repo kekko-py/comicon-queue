@@ -93,30 +93,52 @@ def add_charlie_player():
 @app.route('/simulate', methods=['GET'])
 def simulate():
     couples_board, singles_board, charlie_board = backend.get_waiting_board()
-    next_player = backend.next_player
+    next_player_id = backend.next_player_id
     next_charlie_player = backend.next_charlie_player
     
     # Formatta la coda Charlie nello stesso modo delle altre code
     formatted_charlie_board = []
     for pos, player_id, time_est in charlie_board:
-        formatted_charlie_board.append([
-            player_id,  # ID del giocatore
-            backend.get_player_name(player_id),  # Nome del giocatore
-            time_est    # Orario stimato
-        ])
+        formatted_charlie_board.append({
+            'id': player_id,  # ID del giocatore
+            'name': backend.get_player_name(player_id),  # Nome del giocatore
+            'estimated_time': time_est  # Orario stimato
+        })
+    
+    # Formatta la coda delle coppie
+    formatted_couples_board = []
+    for pos, player_id, time_est in couples_board:
+        formatted_couples_board.append({
+            'id': player_id,  # ID del giocatore
+            'name': backend.get_player_name(player_id),  # Nome del giocatore
+            'estimated_time': time_est  # Orario stimato
+        })
+    
+    # Formatta la coda dei singoli
+    formatted_singles_board = []
+    for pos, player_id, time_est in singles_board:
+        formatted_singles_board.append({
+            'id': player_id,  # ID del giocatore
+            'name': backend.get_player_name(player_id),  # Nome del giocatore
+            'estimated_time': time_est  # Orario stimato
+        })
+    
     # Aggiungi il nome del giocatore per il prossimo giocatore
-    next_player_name = backend.get_player_name(next_player) if next_player else None
-    current_player = backend.current_player_couple if backend.current_player_couple else backend.current_player_single
-    current_player_name = current_player['name'] if current_player else None
+    next_player_name = backend.get_player_name(next_player_id) if next_player_id else None
+    current_player_alfa = backend.current_player_alfa
+    current_player_bravo = backend.current_player_bravo
+    current_player_charlie = backend.current_player_charlie
+
     return jsonify(
-        couples=couples_board, 
-        singles=singles_board,
+        couples=formatted_couples_board, 
+        singles=formatted_singles_board,
         charlie=formatted_charlie_board,
-        next_player=next_player,
+        next_player_id=next_player_id,
         next_player_name=next_player_name,
         next_charlie_player=next_charlie_player,
-        current_player=current_player,
-        current_player_name=current_player_name,
+        current_player_alfa=current_player_alfa,
+        current_player_bravo=current_player_bravo,
+        current_player_charlie=current_player_charlie,
         player_icon_url=url_for('static', filename='icons/Vector.svg')
     )
 
@@ -165,8 +187,12 @@ def button_press():
         # Avvio game coppia
         backend.ALFA_next_available = now + datetime.timedelta(minutes=backend.T_mid)
         backend.BRAVO_next_available = now + datetime.timedelta(minutes=backend.T_total)
+        backend.couple_in_alfa = True
+        backend.couple_in_bravo = True
+        backend.current_player_alfa = backend.queue_couples[0]
+        backend.current_player_bravo = backend.queue_couples[0]
         backend.start_game(is_couple=True)
-        return jsonify(success=True, start_time=now.isoformat(), next_player=backend.next_player, current_player=backend.current_player_couple)
+        return jsonify(success=True, start_time=now.isoformat(), next_player_id=backend.next_player_id, current_player=backend.current_player_couple)
   
     elif button == 'first_stop':
         # Verifica se il pulsante metà percorso è stato premuto
@@ -180,6 +206,8 @@ def button_press():
         backend.record_couple_game(backend.T_mid, game_time)
         backend.BRAVO_next_available = now
         backend.couple_in_bravo = False
+    
+
         backend.third_button_pressed = False  # Reset del flag
         backend.current_player_couple = None  # Reset current player couple
 
@@ -190,13 +218,16 @@ def button_press():
         # Avvio game singolo
         backend.ALFA_next_available = now + datetime.timedelta(minutes=backend.T_single)
         backend.single_in_alfa = True
+        backend.current_player_alfa = backend.queue_singles[0]
         backend.start_game(is_couple=False)
-        return jsonify(success=True, start_time=now.isoformat(), next_player=backend.next_player, current_player=backend.current_player_single)
+        return jsonify(success=True, start_time=now.isoformat(), next_player_id=backend.next_player_id, current_player=backend.current_player_single)
     
     elif button == 'second_stop':
         # Fine game singolo
         game_time = (now - backend.localize_time(backend.ALFA_next_available - datetime.timedelta(minutes=backend.T_single))).total_seconds() / 60
+        backend.current_player_alfa = None
         backend.record_single_game(game_time)
+        
         backend.ALFA_next_available = now
         backend.single_in_alfa = False
         backend.current_player_single = None  # Reset current player single
@@ -220,20 +251,20 @@ def button_press():
 
 @app.route('/skip_next_player', methods=['POST'])
 def skip_next_player():
-    if backend.next_player:
-        print(f"Current player: {backend.next_player}")
-        backend.skip_player(backend.next_player)
-        is_couple = backend.next_player in backend.couples
+    if backend.next_player_id:
+        print(f"Current player: {backend.next_player_id}")
+        backend.skip_player(backend.next_player_id)
+        is_couple = backend.next_player_id in backend.couples
         print(f"Is couple: {is_couple}")
         # Imposta il prossimo giocatore della stessa categoria
         if is_couple and backend.queue_couples:
-            backend.next_player = backend.queue_couples[0]['id']
+            backend.next_player_id = backend.queue_couples[0]['id']
             backend.next_player_locked = True
         elif not is_couple and backend.queue_singles:
-            backend.next_player = backend.queue_singles[0]['id']
+            backend.next_player_id = backend.queue_singles[0]['id']
             backend.next_player_locked = True
         else:
-            backend.next_player = None
+            backend.next_player_id = None
             backend.next_player_locked = False
             # Aggiungi una logica per gestire la coda vuota
             if is_couple:
@@ -243,7 +274,7 @@ def skip_next_player():
                 print("La coda dei singoli è vuota.")
                 # Esegui un'azione specifica, come notificare l'utente
 
-        print(f"Next player: {backend.next_player}")
+        print(f"Next player: {backend.next_player_id}")
     
     can_start_couple = not backend.single_in_alfa and not backend.couple_in_alfa and backend.queue_couples
     can_start_single = not backend.single_in_alfa and backend.queue_singles
