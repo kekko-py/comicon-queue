@@ -41,7 +41,6 @@ function updateBoards() {
   $.get("/simulate", function (data) {
     $("#couples-board").empty();
     $("#singles-board").empty();
-
     // Aggiorna i tabelloni
     data.couples.forEach(function (item) {
       let timeDisplay =
@@ -64,11 +63,11 @@ function updateBoards() {
     });
 
     // Gestisci la notifica del prossimo giocatore
-    if (data.next_player) {
+    if (data.next_player_id && data.next_player_name) {
       $("#next-player-notification")
         .removeClass("hidden")
         .addClass("highlight");
-      $("#next-player-text").text(data.next_player);
+      $("#next-player-text").text(data.next_player_name);
     } else {
       $("#next-player-notification")
         .addClass("hidden")

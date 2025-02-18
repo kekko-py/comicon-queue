@@ -153,12 +153,28 @@ def simulate():
 
 @app.route('/get_status', methods=['GET'])
 def get_status():
+    single_in_alfa = (
+        isinstance(backend.current_player_alfa, dict) and
+        'name' in backend.current_player_alfa and
+        backend.current_player_alfa['name'] == "BLU"
+    )
+    couple_in_alfa = (
+        isinstance(backend.current_player_alfa, dict) and
+        'name' in backend.current_player_alfa and
+        backend.current_player_alfa['name'] == "GIALLO"
+    )
+    couple_in_bravo = (
+        isinstance(backend.current_player_bravo, dict) and
+        'name' in backend.current_player_bravo and
+        backend.current_player_bravo['name'] == "GIALLO"
+    )
+
     print({
-            'single_in_alfa': backend.current_player_alfa is not None and backend.current_player_alfa['name'] == "BLU",
-            'couple_in_alfa': backend.current_player_alfa is not None and backend.current_player_alfa['name'] == "GIALLO",
-            'couple_in_bravo': backend.current_player_bravo is not None and backend.current_player_bravo['name'] == "GIALLO",
-            'third_button_pressed': backend.third_button_pressed
-        })
+        'single_in_alfa': single_in_alfa,
+        'couple_in_alfa': couple_in_alfa,
+        'couple_in_bravo': couple_in_bravo,
+        'third_button_pressed': backend.third_button_pressed
+    })
     now = backend.get_current_time()
     backend.ALFA_next_available = backend.localize_time(backend.ALFA_next_available)
     backend.BRAVO_next_available = backend.localize_time(backend.BRAVO_next_available)
