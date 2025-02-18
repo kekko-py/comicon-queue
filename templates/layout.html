@@ -1,87 +1,82 @@
 <!DOCTYPE html>
 <html lang="it">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Simulazione Code</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Roboto", sans-serif;
-      }
 
-      body {
-        background: #556959;
-        min-height: 100vh;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <title>Simulazione Code</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Roboto", sans-serif;
+    }
 
-      .navbar {
-        background: #1a237e;
-        padding: 1rem;
-        margin-bottom: 2rem;
-      }
+    body {
+      background: #556959;
+      min-height: 100vh;
+    }
 
-      .nav-links {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: center;
-        gap: 2rem;
-      }
+    .navbar {
+      background: #1a237e;
+      padding: 1rem;
+      margin-bottom: 2rem;
+    }
 
-      .nav-links a {
-        color: white;
-        text-decoration: none;
-        padding: 0.5rem 1rem;
-        border-radius: 5px;
-        transition: background-color 0.3s;
-      }
+    .nav-links {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+    }
 
-      .nav-links a:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-      }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
 
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-      }
+    .nav-links a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
 
-      h1 {
-        text-align: center;
-        color: #f5a525;
-        margin-bottom: 30px;
-        font-size: 2.5em;
-      }
-    </style>
-    {% block extra_css %}{% endblock %}
-  </head>
-  <body>
-    <nav class="navbar">
-      <div class="nav-links">
-        <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
-        <a href="{{ url_for('controls_couple') }}" class="nav-link"
-          >Controllo Coppia</a
-        >
-        <a href="{{ url_for('controls_single') }}" class="nav-link"
-          >Controllo Singolo</a
-        >
-        <a href="{{ url_for('controls_charlie') }}" class="nav-link"
-          >Controllo Charlie</a
-        >
-        <a href="{{ url_for('scoring') }}" class="nav-link">scoring</a>
-        <a href="{{ url_for('keypad') }}" class="nav-link">Tastierino</a>
-      </div>
-    </nav>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
 
-    <div class="container">{% block content %}{% endblock %}</div>
+    h1 {
+      text-align: center;
+      color: #f5a525;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
 
-    {% block scripts %}{% endblock %}
-  </body>
+<body>
+  <nav class="navbar">
+    <div class="nav-links">
+      <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+      <a href="{{ url_for('controls_couple') }}" class="nav-link">Controllo Coppia</a>
+      <a href="{{ url_for('controls_single') }}" class="nav-link">Controllo Singolo</a>
+      <a href="{{ url_for('controls_charlie') }}" class="nav-link">Controllo Charlie</a>
+      <a href="{{ url_for('controls_cassa') }}" class="nav-link">Cassa</a>
+      <a href="{{ url_for('scoring') }}" class="nav-link">scoring</a>
+      <a href="{{ url_for('keypad') }}" class="nav-link">Tastierino</a>
+    </div>
+  </nav>
+
+  <div class="container">{% block content %}{% endblock %}</div>
+
+  {% block scripts %}{% endblock %}
+</body>
+
 </html>

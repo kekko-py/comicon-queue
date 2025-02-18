@@ -57,26 +57,37 @@ class GameBackend:
         self.next_charlie_player = None
         self.next_charlie_player_locked = False
 
-        # Inizializza le code con i nuovi formati ID
-        for i in range(1, 11):
-            couple_id = f"GIALLO-{i:02d}"
-            single_id = f"BLU-{i:02d}"
-            charlie_id = f"VERDE-{i:02d}"
-            
-            self.add_couple(couple_id)
-            self.add_single(single_id)
-            self.add_charlie_player(charlie_id)
+        self.player_names = {}  # Dizionario per memorizzare i nomi dei giocatori
+        self.current_player_couple = None
+        self.current_player_single = None
 
-    def add_charlie_player(self, player_id):
-        """Aggiunge un giocatore alla coda Charlie"""
-        if not any(p['id'] == player_id for p in self.queue_charlie):
-            self.queue_charlie.append({
-                'id': player_id,
-                'timestamp': self.get_current_time()
-            })
-            if not self.next_charlie_player and not self.next_charlie_player_locked:
-                self.next_charlie_player = player_id
-                self.next_charlie_player_locked = True
+        # Inizializza le code con i nuovi formati ID
+        # for i in range(1, 11):
+        #     couple_id = f"GIALLO-{i:02d}"
+        #     single_id = f"BLU-{i:02d}"
+        #     charlie_id = f"VERDE-{i:02d}"
+            
+        #     self.add_couple(couple_id)
+        #     self.add_single(single_id)
+        #     self.add_charlie_player(charlie_id)
+
+    def add_couple(self, couple_id, name):
+        self.queue_couples.append({'id': couple_id, 'name': name})
+        self.player_names[couple_id] = name
+        if not self.next_player:
+            self.next_player = couple_id
+
+    def add_single(self, single_id, name):
+        self.queue_singles.append({'id': single_id, 'name': name})
+        self.player_names[single_id] = name
+        if not self.next_player:
+            self.next_player = single_id
+
+    def add_charlie_player(self, player_id, name):
+        self.queue_charlie.append({'id': player_id, 'name': name})
+        self.player_names[player_id] = name
+        if not self.next_charlie_player:
+            self.next_charlie_player = player_id
 
     def record_couple_game(self, mid_time, total_time):
         """
@@ -164,38 +175,23 @@ class GameBackend:
         else:
             self.T_charlie = self.default_T_charlie
 
-    def add_couple(self, couple_id):
-        """Aggiunge una coppia alla coda con timestamp di Roma"""
-        self.queue_couples.append({
-            'id': couple_id,
-            'arrival': self.get_current_time()
-        })
 
-    def add_single(self, single_id):
-        """Aggiunge un singolo alla coda con timestamp di Roma"""
-        self.queue_singles.append({
-            'id': single_id,
-            'arrival': self.get_current_time()
-        })
+    
 
-    def record_couple_game(self, mid_time, total_time):
-        """
-        Registra i tempi (in minuti) relativi a un game coppia:
-          - mid_time: tempo dal Pulsante 1 all'attivazione del Pulsante 3
-          - total_time: tempo totale dal Pulsante 1 (avvio) allo stop (liberazione di BRAVO)
-        Dopo la registrazione, aggiorna i tempi medi.
-        """
-        self.couple_history_mid.append(mid_time)
-        self.couple_history_total.append(total_time)
-        self.update_averages()
+    def get_player_name(self, player_id):
+        return self.player_names.get(player_id, player_id)
 
-    def record_single_game(self, game_time):
-        """
-        Registra il tempo (in minuti) relativo a un game singolo (durata in cui ALFA è occupata).
-        Dopo la registrazione, aggiorna i tempi medi.
-        """
-        self.single_history.append(game_time)
-        self.update_averages()
+    # Altri metodi...
+
+    def start_game(self, is_couple):
+        if is_couple:
+            if self.queue_couples:
+                self.current_player_couple = self.queue_couples.pop(0)
+                self.next_player = self.queue_couples[0]['id'] if self.queue_couples else None
+        else:
+            if self.queue_singles:
+                self.current_player_single = self.queue_singles.pop(0)
+                self.next_player = self.queue_singles[0]['id'] if self.queue_singles else None
 
     def simulate_schedule(self):
         """
@@ -335,22 +331,15 @@ class GameBackend:
         """Avvia un nuovo game e rimuove il giocatore dalla coda"""
         if is_couple:
             if self.queue_couples:
-                player = self.queue_couples.pop(0)
-                self.couple_in_bravo = True
+                self.current_player_couple = self.queue_couples.pop(0)
+                self.next_player = self.queue_couples[0]['id'] if self.queue_couples else None
                 self.couple_in_alfa = True
-                self.single_in_alfa = False
-                self.third_button_pressed = False  # Reset del flag all'inizio di un nuovo game coppia
-                if player['id'] == self.next_player:
-                    self.next_player = None
-                    self.next_player_locked = False
-        else:  # Singolo
+                self.couple_in_bravo = True
+        else:
             if self.queue_singles:
-                player = self.queue_singles.pop(0)
-                self.single_in_alfa = True    # Imposta il flag
-                self.couple_in_alfa = False
-            if player['id'] == self.next_player:
-                self.next_player = None
-                self.next_player_locked = False
+                self.current_player_single = self.queue_singles.pop(0)
+                self.next_player = self.queue_singles[0]['id'] if self.queue_singles else None
+                self.single_in_alfa = True
 
     def button_third_pressed(self):
         """Gestisce la pressione del pulsante metà percorso"""
@@ -405,15 +394,17 @@ class GameBackend:
         player = next((p for p in self.skipped_charlie if p['id'] == player_id), None)
         if player:
             self.skipped_charlie.remove(player)
-            self.add_charlie_player(player_id)
+            self.add_charlie_player(player_id, player['name'])
 
-    def add_charlie_player(self, player_id):
+    def add_charlie_player(self, player_id, name):
         """Aggiunge un giocatore alla coda Charlie"""
         if not any(p['id'] == player_id for p in self.queue_charlie):
             self.queue_charlie.append({
                 'id': player_id,
-                'timestamp': self.get_current_time()
+                'timestamp': self.get_current_time(),
+                'name': name
             })
+            self.player_names[player_id] = name
             if not self.next_charlie_player and not self.next_charlie_player_locked:
                 self.next_charlie_player = player_id
                 self.next_charlie_player_locked = True
@@ -453,12 +444,12 @@ if __name__ == '__main__':
     
 
     # Aggiungiamo alcune coppie e alcuni singoli in coda
-    backend.add_couple("GIALLO-01")
-    backend.add_single("BLU-01")
-    backend.add_couple("GIALLO-02")
-    backend.add_single("BLU-02")
-    backend.add_couple("GIALLO-03")
-    backend.add_single("BLU-03")
+    # backend.add_couple("GIALLO-01")
+    # backend.add_single("BLU-01")
+    # backend.add_couple("GIALLO-02")
+    # backend.add_single("BLU-02")
+    # backend.add_couple("GIALLO-03")
+    # backend.add_single("BLU-03")
 
     # Assicuriamoci che, al momento, non ci sia un game in corso
     now = datetime.datetime.now()

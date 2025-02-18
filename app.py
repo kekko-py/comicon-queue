@@ -18,14 +18,14 @@ def initialize_queues():
     backend.queue_charlie.clear()
     
     # Popola le code con 10 elementi ciascuna
-    for i in range(1, 11):
-        couple_id = f"GIALLO-{i:02d}"  # Genera C01, C02, ..., C10
-        single_id = f"BLU-{i:02d}"  # Genera S01, S02, ..., S10
-        charlie_id = f"VERDE-{i:02d}"  # Genera G01, G02, ..., G10
+    # for i in range(1, 11):
+    #     couple_id = f"GIALLO-{i:02d}"  # Genera C01, C02, ..., C10
+    #     single_id = f"BLU-{i:02d}"  # Genera S01, S02, ..., S10
+    #     charlie_id = f"VERDE-{i:02d}"  # Genera G01, G02, ..., G10
         
-        backend.add_couple(couple_id)
-        backend.add_single(single_id)
-        backend.add_charlie_player(charlie_id)
+    #     backend.add_couple(couple_id)
+    #     backend.add_single(single_id)
+    #     backend.add_charlie_player(charlie_id)
 
 # Chiama l'inizializzazione subito dopo la creazione dell'app
 initialize_queues()
@@ -33,6 +33,10 @@ initialize_queues()
 @app.route('/')
 def index():
     return redirect(url_for('dashboard'))
+
+@app.route('/controls/cassa')
+def controls_cassa():
+    return render_template('controls_cassa.html')
 
 @app.route('/controls/couple')
 def controls_couple():
@@ -68,19 +72,22 @@ def dashboard():
 @app.route('/add_couple', methods=['POST'])
 def add_couple():
     couple_id = request.json.get('id')
-    backend.add_couple(couple_id)
+    name = request.json.get('name')
+    backend.add_couple(couple_id, name)
     return jsonify(success=True)
 
 @app.route('/add_single', methods=['POST'])
 def add_single():
     single_id = request.json.get('id')
-    backend.add_single(single_id)
+    name = request.json.get('name')
+    backend.add_single(single_id, name)
     return jsonify(success=True)
 
 @app.route('/add_charlie_player', methods=['POST'])
 def add_charlie_player():
     player_id = request.json.get('id')
-    backend.add_charlie_player(player_id)
+    name = request.json.get('name')
+    backend.add_charlie_player(player_id, name)
     return jsonify(success=True)
 
 @app.route('/simulate', methods=['GET'])
@@ -94,17 +101,23 @@ def simulate():
     for pos, player_id, time_est in charlie_board:
         formatted_charlie_board.append([
             player_id,  # ID del giocatore
-            player_id,  # Nome visualizzato
+            backend.get_player_name(player_id),  # Nome del giocatore
             time_est    # Orario stimato
         ])
-
+    # Aggiungi il nome del giocatore per il prossimo giocatore
+    next_player_name = backend.get_player_name(next_player) if next_player else None
+    current_player = backend.current_player_couple if backend.current_player_couple else backend.current_player_single
+    current_player_name = current_player['name'] if current_player else None
     return jsonify(
         couples=couples_board, 
         singles=singles_board,
         charlie=formatted_charlie_board,
         next_player=next_player,
+        next_player_name=next_player_name,
         next_charlie_player=next_charlie_player,
-       player_icon_url=url_for('static', filename='icons/Vector.svg')
+        current_player=current_player,
+        current_player_name=current_player_name,
+        player_icon_url=url_for('static', filename='icons/Vector.svg')
     )
 
 @app.route('/get_status', methods=['GET'])
@@ -145,13 +158,16 @@ def button_press():
             'couple_in_bravo': backend.couple_in_bravo,
             'third_button_pressed': backend.third_button_pressed
         })
+        if not backend.queue_couples:
+            return jsonify(success=False, error="La coda delle coppie è vuota. Non è possibile avviare il gioco.")
         if backend.single_in_alfa:
             return jsonify(success=False, error="Non è possibile avviare il gioco di coppia mentre ALFA è occupata da un singolo.")
         # Avvio game coppia
         backend.ALFA_next_available = now + datetime.timedelta(minutes=backend.T_mid)
         backend.BRAVO_next_available = now + datetime.timedelta(minutes=backend.T_total)
         backend.start_game(is_couple=True)
-        return jsonify(success=True)
+        return jsonify(success=True, start_time=now.isoformat(), next_player=backend.next_player, current_player=backend.current_player_couple)
+  
     elif button == 'first_stop':
         # Verifica se il pulsante metà percorso è stato premuto
         if not backend.can_stop_couple():
@@ -165,21 +181,31 @@ def button_press():
         backend.BRAVO_next_available = now
         backend.couple_in_bravo = False
         backend.third_button_pressed = False  # Reset del flag
+        backend.current_player_couple = None  # Reset current player couple
+
     elif button == 'second_start':
+        if not backend.queue_singles:
+            return jsonify(success=False, error="La coda dei singoli è vuota. Non è possibile avviare il gioco.")
+        
         # Avvio game singolo
         backend.ALFA_next_available = now + datetime.timedelta(minutes=backend.T_single)
         backend.single_in_alfa = True
         backend.start_game(is_couple=False)
-    elif button == 'second_stop':
+        return jsonify(success=True, start_time=now.isoformat(), next_player=backend.next_player, current_player=backend.current_player_single)
     
+    elif button == 'second_stop':
         # Fine game singolo
         game_time = (now - backend.localize_time(backend.ALFA_next_available - datetime.timedelta(minutes=backend.T_single))).total_seconds() / 60
         backend.record_single_game(game_time)
         backend.ALFA_next_available = now
         backend.single_in_alfa = False
+        backend.current_player_single = None  # Reset current player single
+
     elif button == 'third':
         backend.button_third_pressed()
     elif button == 'charlie_start':
+        if not backend.queue_charlie:
+            return jsonify(success=False, error="La coda di Charlie è vuota. Non è possibile avviare il gioco.")
         # Avvio game Charlie
         backend.CHARLIE_next_available = now + datetime.timedelta(minutes=backend.T_charlie)
         backend.start_charlie_game()
@@ -191,12 +217,14 @@ def button_press():
         backend.player_in_charlie = False
     
     return jsonify(success=True)
+
 @app.route('/skip_next_player', methods=['POST'])
 def skip_next_player():
     if backend.next_player:
+        print(f"Current player: {backend.next_player}")
         backend.skip_player(backend.next_player)
-        is_couple = backend.next_player.startswith('GIALLO-')
-        print(is_couple)
+        is_couple = backend.next_player in backend.couples
+        print(f"Is couple: {is_couple}")
         # Imposta il prossimo giocatore della stessa categoria
         if is_couple and backend.queue_couples:
             backend.next_player = backend.queue_couples[0]['id']
@@ -207,9 +235,22 @@ def skip_next_player():
         else:
             backend.next_player = None
             backend.next_player_locked = False
+            # Aggiungi una logica per gestire la coda vuota
+            if is_couple:
+                print("La coda delle coppie è vuota.")
+                # Esegui un'azione specifica, come notificare l'utente
+            else:
+                print("La coda dei singoli è vuota.")
+                # Esegui un'azione specifica, come notificare l'utente
+
+        print(f"Next player: {backend.next_player}")
     
-    
-    return jsonify(success=True)
+    can_start_couple = not backend.single_in_alfa and not backend.couple_in_alfa and backend.queue_couples
+    can_start_single = not backend.single_in_alfa and backend.queue_singles
+    can_start_charlie = not backend.player_in_charlie and backend.queue_charlie
+
+    return jsonify(success=True, can_start_couple=can_start_couple, can_start_single=can_start_single, can_start_charlie=can_start_charlie)
+
 
 @app.route('/skip_charlie_player', methods=['POST'])
 def skip_charlie_player():
@@ -256,7 +297,7 @@ def check_availability():
     bravo_available = (backend.couple_in_bravo == False and backend.couple_in_alfa == False and backend.single_in_alfa == False)
     
     return jsonify({
-        'can_start_couple': alfa_available and bravo_available,  # Coppia ha bisogno di entrambe le piste
+        'can_start_couple': alfa_available and bravo_available ,  # Coppia ha bisogno di entrambe le piste
         'can_start_single': alfa_available,  # Singolo ha bisogno solo di ALFA
         'alfa_status': 'Libera' if alfa_available else 'Occupata',
         'bravo_status': 'Libera' if bravo_available else 'Occupata'

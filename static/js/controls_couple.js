@@ -3,17 +3,25 @@ let startTime;
 let isGameActive = false;
 
 function updateNextPlayer() {
-    if ($('#current-player').text() !== '-' && !$('#next-player-btn').prop('disabled')) {
-        return;
-    }
+
 
     fetch('/simulate')
         .then(response => response.json())
         .then(data => {
-            if (data.couples && data.couples.length > 0) {
-                const playerId = data.couples[0][1];  // Ora sarà nel formato GIALLO-XX
+            if (data.couples && data.couples.length > 0 || data.current_player) {
+                if (data.couples && data.couples.length > 0) {
+                    const playerId = data.couples[0][1];  // Ora sarà nel formato GIALLO-XX
+                    $('#next-player').text(playerId);
+                    $('#next-player-btn').prop('disabled', false);
+                    console.log(`Next player to start: ${playerId}`);  // Log del prossimo giocatore
+                } else {
+                    $('#next-player').text('-');
+                    $('#next-player-btn').prop('disabled', true);
+                }
+                const playerId = data.current_player.id;  // Ora sarà nel formato GIALLO-XX
                 $('#current-player').text(playerId);
                 $('#next-player-btn').prop('disabled', false);
+                console.log(`Next player to start: ${playerId}`);  // Log del prossimo giocatore
             } else {
                 $('#current-player').text('-');
                 $('#next-player-btn').prop('disabled', true);
@@ -32,8 +40,8 @@ function updateAvailability() {
         } else {
             $('#start-btn').attr('title', '');
         }
+        updateNextPlayer();
     });
-    updateNextPlayer();
 }
 
 function updateTimer() {
@@ -72,12 +80,16 @@ function pressButton(button) {
                 $('#next-player-btn').prop('disabled', true);
                 $('#start-btn').prop('disabled', true);
                 $('#stop-btn').prop('disabled', false);
-            } else if (button === 'first_stop') {
+                $('#current-player').text(response.current_player.name); // Aggiorna il giocatore corrente
+            } else if (button === 'first_stop' && isGameActive) {
                 isGameActive = false;
                 clearInterval(timerInterval);
                 $('#next-player-btn').prop('disabled', false);
                 $('#start-btn, #stop-btn').prop('disabled', true);
+                $('#current-player').text('-'); // Resetta il giocatore corrente
             }
+
+            updateAvailability();
         }
     });
 }
@@ -94,20 +106,30 @@ function skipPlayer() {
         })
             .then(response => response.json())
             .then(() => {
+                // Dopo lo skip, aggiorna immediatamente per mostrare il prossimo giocatore dello stesso tipo
                 fetch('/simulate')
                     .then(response => response.json())
                     .then(data => {
+
+                        // Cerca il prossimo giocatore di tipo singolo (blu)
                         if (data.couples && data.couples.length > 0) {
                             $('#current-player').text(data.couples[0][1]);
                             $('#next-player-btn').prop('disabled', false);
+                        } else {
+                            $('#current-player').text('-');
+                            $('#next-player-btn').prop('disabled', true);
                         }
                     });
             });
     }
 }
 
-// timer per aggiornare la disponibilità delle piste
-setInterval(updateAvailability, 5000);
+// timer per aggiornare la disponibilità delle piste e prossimo giocatore
+setInterval(() => {
+    updateAvailability();
+    updateNextPlayer();
+}, 1000);
+
 
 $(document).ready(function () {
     updateAvailability();

@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/controls_cassa.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Cassa</h1>
+
+<div class="game-info">
+    <div class="current-player">
+        Prenotazione in gioco: <span id="current-player">-</span>
+    </div>
+    <div class="game-timer">
+        Tempo trascorso: <span id="timer">00:00</span>
+    </div>
+</div>
+
+<div class="control-panel">
+    <form id="queueForm">
+        <label for="playerType">Tipo di giocatore:</label>
+        <select id="playerType" name="playerType" class="input-field">
+            <option value="single">Singolo</option>
+            <option value="couple">Coppia</option>
+            <option value="charlie">Charlie</option>
+        </select>
+        <label for="playerId">ID Giocatore:</label>
+        <input type="text" id="playerId" name="playerId" class="input-field" required>
+        <button type="submit" class="btn btn-add">Aggiungi alla coda</button>
+    </form>
+    <div class="status">
+        Stato: <span id="status">Inattivo</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('queueForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        const playerType = document.getElementById('playerType').value;
+        const playerId = document.getElementById('playerId').value;
+        fetch(`/add_${playerType}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: playerId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Giocatore aggiunto con successo!');
+                } else {
+                    alert('Errore nell\'aggiunta del giocatore.');
+                }
+            });
+    });
+</script>
+{% endblock %}
