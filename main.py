@@ -224,6 +224,14 @@ class GameBackend:
 
         # Simulazione: continuiamo finché rimane almeno un elemento in una delle code
         while couples or singles:
+            # Se non ci sono coppie in coda, ma ci sono singoli, serviamo un singolo
+            if not couples and singles:
+                item = singles.pop(0)
+                start_time = sim_time
+                estimated_times[item['id']] = start_time
+                sim_time = start_time + dt_single
+                continue
+
             # Se, al momento in cui ALFA è libera, anche BRAVO lo è (o è già stata liberata),
             # allora possiamo avviare un game coppia se in coda.
             if BRAVO_avail <= sim_time:
@@ -342,6 +350,8 @@ class GameBackend:
         self.couple_in_alfa = False
         self.current_player_alfa = None
         self.third_button_pressed = True
+        self.next_player_id = self.queue_singles[0]['id'] if self.queue_singles else self.queue_couples[0]['id'] if self.queue_couples else None
+        self.next_player_name = self.get_player_name(self.next_player_id)
         self.ALFA_next_available = self.get_current_time()
 
     def can_stop_couple(self):

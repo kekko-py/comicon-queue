@@ -71,22 +71,31 @@ def dashboard():
 
 @app.route('/add_couple', methods=['POST'])
 def add_couple():
-    couple_id = request.json.get('id')
-    name = request.json.get('name')
+    id = request.json.get('id')
+    if not id:
+        return jsonify(success=False, error="id is required"), 400
+    name = "GIALLO"
+    couple_id = f"{name}-{int(id):02d}"
     backend.add_couple(couple_id, name)
     return jsonify(success=True)
 
 @app.route('/add_single', methods=['POST'])
 def add_single():
-    single_id = request.json.get('id')
-    name = request.json.get('name')
+    id = request.json.get('id')
+    if not id:
+        return jsonify(success=False, error="id is required"), 400
+    name = "BLU"
+    single_id = f"{name}-{int(id):02d}"
     backend.add_single(single_id, name)
     return jsonify(success=True)
 
 @app.route('/add_charlie_player', methods=['POST'])
 def add_charlie_player():
-    player_id = request.json.get('id')
     name = request.json.get('name')
+    id = request.json.get('id')
+    if not name or not id:
+        return jsonify(success=False, error="Name and id are required"), 400
+    player_id = f"{name.upper()}-{int(id):02d}"
     backend.add_charlie_player(player_id, name)
     return jsonify(success=True)
 
@@ -227,7 +236,8 @@ def button_press():
         game_time = (now - backend.localize_time(backend.ALFA_next_available - datetime.timedelta(minutes=backend.T_single))).total_seconds() / 60
         backend.current_player_alfa = None
         backend.record_single_game(game_time)
-        
+        backend.next_player_id = backend.queue_couples[0]['id'] if backend.queue_couples else None
+        backend.next_player_name = backend.get_player_name(backend.next_player_id) if backend.next_player_id else None
         backend.ALFA_next_available = now
         backend.single_in_alfa = False
         backend.current_player_single = None  # Reset current player single

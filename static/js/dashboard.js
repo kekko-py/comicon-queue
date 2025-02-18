@@ -45,21 +45,21 @@ function updateBoards() {
     // Aggiorna i tabelloni
     data.couples.forEach(function (item) {
       let timeDisplay =
-        item[2] === "PROSSIMO INGRESSO"
+        item.estimated_time === "PROSSIMO INGRESSO"
           ? "PROSSIMO INGRESSO"
-          : formatTimeRome(item[2]);
+          : formatTimeRome(item.estimated_time);
       $("#couples-board").append(
-        `<li>${item[1]} - Ingresso: ${timeDisplay}</li>`
+        `<li>${item.name} ${item.id} - Ingresso: ${timeDisplay}</li>`
       );
     });
 
     data.singles.forEach(function (item) {
       let timeDisplay =
-        item[2] === "PROSSIMO INGRESSO"
+        item.estimated_time === "PROSSIMO INGRESSO"
           ? "PROSSIMO INGRESSO"
-          : formatTimeRome(item[2]);
+          : formatTimeRome(item.estimated_time);
       $("#singles-board").append(
-        `<li>${item[1]} - Ingresso: ${timeDisplay}</li>`
+        `<li>${item.name} ${item.estimated_time} - Ingresso: ${timeDisplay}</li>`
       );
     });
 
@@ -165,11 +165,11 @@ function updateDashboard() {
       couplesBoard.innerHTML = "";
       data.couples.forEach((player) => {
         const timeDisplay =
-          player[2] === "PROSSIMO INGRESSO"
+          player.estimated_time === "PROSSIMO INGRESSO"
             ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player[2]);
+            : formatTimeRome(player.estimated_time);
         const li = document.createElement("li");
-        li.textContent = `${player[1]} - Ingresso: ${timeDisplay}`;
+        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
         couplesBoard.appendChild(li);
       });
 
@@ -177,12 +177,13 @@ function updateDashboard() {
       const singlesBoard = document.getElementById("singles-board");
       singlesBoard.innerHTML = "";
       data.singles.forEach((player) => {
+        console.log(player, "player");
         const timeDisplay =
-          player[2] === "PROSSIMO INGRESSO"
+          player.estimated_time === "PROSSIMO INGRESSO"
             ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player[2]);
+            : formatTimeRome(player.estimated_time);
         const li = document.createElement("li");
-        li.textContent = `${player[1]} - Ingresso: ${timeDisplay}`;
+        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
         singlesBoard.appendChild(li);
       });
 
@@ -191,11 +192,11 @@ function updateDashboard() {
       charlieBoard.innerHTML = "";
       data.charlie.forEach((player) => {
         const timeDisplay =
-          player[2] === "PROSSIMO INGRESSO"
+          player.estimated_time === "PROSSIMO INGRESSO"
             ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player[2]);
+            : formatTimeRome(player.estimated_time);
         const li = document.createElement("li");
-        li.textContent = `${player[1]} - Ingresso: ${timeDisplay}`;
+        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
         charlieBoard.appendChild(li);
       });
 
