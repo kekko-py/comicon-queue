@@ -109,6 +109,12 @@ def simulate():
 
 @app.route('/get_status', methods=['GET'])
 def get_status():
+    print({
+            'single_in_alfa': backend.single_in_alfa,
+            'couple_in_alfa': backend.couple_in_alfa,
+            'couple_in_bravo': backend.couple_in_bravo,
+            'third_button_pressed': backend.third_button_pressed
+        })
     now = backend.get_current_time()
     backend.ALFA_next_available = backend.localize_time(backend.ALFA_next_available)
     backend.BRAVO_next_available = backend.localize_time(backend.BRAVO_next_available)
@@ -119,8 +125,8 @@ def get_status():
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
     
     return jsonify({
-        'alfa_status': 'Occupata' if backend.single_in_alfa else 'Libera',
-        'bravo_status': 'Occupata' if (backend.couple_in_bravo or backend.single_in_alfa) else 'Libera',
+        'alfa_status': 'Occupata' if backend.single_in_alfa or backend.couple_in_alfa else 'Libera',
+        'bravo_status': 'Occupata' if (backend.couple_in_bravo) else 'Libera',
         'charlie_status': 'Occupata' if charlie_remaining > 0 else 'Libera',
         'alfa_remaining': f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
         'bravo_remaining': f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
@@ -133,13 +139,17 @@ def button_press():
     now = backend.get_current_time()
     
     if button == 'first_start':
+        print({
+            'single_in_alfa': backend.single_in_alfa,
+            'couple_in_alfa': backend.couple_in_alfa,
+            'couple_in_bravo': backend.couple_in_bravo,
+            'third_button_pressed': backend.third_button_pressed
+        })
         if backend.single_in_alfa:
             return jsonify(success=False, error="Non è possibile avviare il gioco di coppia mentre ALFA è occupata da un singolo.")
         # Avvio game coppia
         backend.ALFA_next_available = now + datetime.timedelta(minutes=backend.T_mid)
         backend.BRAVO_next_available = now + datetime.timedelta(minutes=backend.T_total)
-        backend.couple_in_bravo = True
-        backend.single_in_alfa = True
         backend.start_game(is_couple=True)
         return jsonify(success=True)
     elif button == 'first_stop':
@@ -161,6 +171,7 @@ def button_press():
         backend.single_in_alfa = True
         backend.start_game(is_couple=False)
     elif button == 'second_stop':
+    
         # Fine game singolo
         game_time = (now - backend.localize_time(backend.ALFA_next_available - datetime.timedelta(minutes=backend.T_single))).total_seconds() / 60
         backend.record_single_game(game_time)
@@ -231,13 +242,18 @@ def restore_skipped():
 
 @app.route('/check_availability', methods=['GET'])
 def check_availability():
+    print({
+            'single_in_alfa': backend.single_in_alfa,
+            'couple_in_alfa': backend.couple_in_alfa,
+            'couple_in_bravo': backend.couple_in_bravo,
+            'third_button_pressed': backend.third_button_pressed
+        })
     now = backend.get_current_time()
     
     # Verifica disponibilità ALFA e BRAVO
-    alfa_available = (backend.ALFA_next_available - now).total_seconds() <= 0
-    bravo_available = (backend.BRAVO_next_available - now).total_seconds() <= 0
-    # alfa_available = (backend.single_in_alfa == False )
-    # bravo_available = (backend.couple_in_bravo == False and backend.single_in_alfa == False)
+   
+    alfa_available = (backend.single_in_alfa == False and backend.couple_in_alfa == False)
+    bravo_available = (backend.couple_in_bravo == False and backend.couple_in_alfa == False and backend.single_in_alfa == False)
     
     return jsonify({
         'can_start_couple': alfa_available and bravo_available,  # Coppia ha bisogno di entrambe le piste

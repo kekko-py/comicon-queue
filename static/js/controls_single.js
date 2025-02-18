@@ -22,11 +22,11 @@ function updateNextPlayer() {
 }
 
 function updateAvailability() {
-    $.get('/check_availability', function(data) {
+    $.get('/check_availability', function (data) {
         const canStart = data.can_start_single;
         $('#start-btn').prop('disabled', !canStart);
         $('#status').text(`ALFA: ${data.alfa_status} - BRAVO: ${data.bravo_status}`);
-        
+
         if (!canStart) {
             $('#start-btn').attr('title', 'Attendere che la pista ALFA sia libera');
         } else {
@@ -58,13 +58,13 @@ function pressButton(button) {
         url: '/button_press',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({button: button}),
-        success: function(response) {
+        data: JSON.stringify({ button: button }),
+        success: function (response) {
             if (!response.success) {
                 alert(response.error);
                 return;
             }
-            
+
             if (button === 'second_start') {
                 startTime = new Date();
                 isGameActive = true;
@@ -72,13 +72,13 @@ function pressButton(button) {
                 $('#next-player-btn').prop('disabled', true);
                 $('#start-btn').prop('disabled', true);
                 $('#stop-btn').prop('disabled', false);
-            } else if (button === 'second_stop') {
+            } else if (button === 'second_stop' && isGameActive) {
                 isGameActive = false;
                 clearInterval(timerInterval);
                 $('#next-player-btn').prop('disabled', false);
                 $('#start-btn, #stop-btn').prop('disabled', true);
             }
-            
+
             updateAvailability();
         }
     });
@@ -94,29 +94,26 @@ function skipPlayer() {
             },
             body: JSON.stringify({ id: currentPlayer })
         })
-        .then(response => response.json())
-        .then(() => {
-            // Dopo lo skip, aggiorna immediatamente per mostrare il prossimo giocatore dello stesso tipo
-            fetch('/simulate')
-                .then(response => response.json())
-                .then(data => {
-                    // Cerca il prossimo giocatore di tipo singolo (blu)
-                    if (data.singles && data.singles.length > 0) {
-                        $('#current-player').text(data.singles[0][1]);
-                        $('#next-player-btn').prop('disabled', false);
-                    } //else {
-                    //     $('#current-player').text('-');
-                    //     $('#next-player-btn').prop('disabled', true);
-                    // }
-                });
-        });
+            .then(response => response.json())
+            .then(() => {
+                // Dopo lo skip, aggiorna immediatamente per mostrare il prossimo giocatore dello stesso tipo
+                fetch('/simulate')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Cerca il prossimo giocatore di tipo singolo (blu)
+                        if (data.singles && data.singles.length > 0) {
+                            $('#current-player').text(data.singles[0][1]);
+                            $('#next-player-btn').prop('disabled', false);
+                        } //else {
+                        //     $('#current-player').text('-');
+                        //     $('#next-player-btn').prop('disabled', true);
+                        // }
+                    });
+            });
     }
 }
 
 setInterval(updateAvailability, 1000);
-$(document).ready(function() {
-    $.get('/check_availability', function(data) {
-        isGameActive = data.alfa_status === 'Occupata' || data.bravo_status === 'Occupata';
-        updateAvailability();
-    });
+$(document).ready(function () {
+    updateAvailability();
 });

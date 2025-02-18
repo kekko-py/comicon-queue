@@ -22,11 +22,11 @@ function updateNextPlayer() {
 }
 
 function updateAvailability() {
-    $.get('/check_availability', function(data) {
+    $.get('/check_availability', function (data) {
         const canStart = data.can_start_couple;
         $('#start-btn').prop('disabled', !canStart);
         $('#status').text(`ALFA: ${data.alfa_status} - BRAVO: ${data.bravo_status}`);
-        
+
         if (!canStart) {
             $('#start-btn').attr('title', 'Attendere che entrambe le piste siano libere');
         } else {
@@ -58,13 +58,13 @@ function pressButton(button) {
         url: '/button_press',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({button: button}),
-        success: function(response) {
+        data: JSON.stringify({ button: button }),
+        success: function (response) {
             if (!response.success) {
                 alert(response.error);
                 return;
             }
-            
+
             if (button === 'first_start') {
                 startTime = new Date();
                 isGameActive = true;
@@ -92,20 +92,23 @@ function skipPlayer() {
             },
             body: JSON.stringify({ id: currentPlayer })
         })
-        .then(response => response.json())
-        .then(() => {
-            fetch('/simulate')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.couples && data.couples.length > 0) {
-                        $('#current-player').text(data.couples[0][1]);
-                        $('#next-player-btn').prop('disabled', false);
-                    }
-                });
-        });
+            .then(response => response.json())
+            .then(() => {
+                fetch('/simulate')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.couples && data.couples.length > 0) {
+                            $('#current-player').text(data.couples[0][1]);
+                            $('#next-player-btn').prop('disabled', false);
+                        }
+                    });
+            });
     }
 }
 
-$(document).ready(function() {
+// timer per aggiornare la disponibilità delle piste
+setInterval(updateAvailability, 5000);
+
+$(document).ready(function () {
     updateAvailability();
 });

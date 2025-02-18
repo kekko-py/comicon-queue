@@ -43,6 +43,7 @@ class GameBackend:
         self.next_player_locked = False
 
         self.couple_in_bravo = False  # Flag per tracciare se c'è una coppia in BRAVO
+        self.couple_in_alfa = False   # Flag per tracciare se c'è una coppia in ALFA
         self.single_in_alfa = False   # Flag per tracciare se c'è un singolo in ALFA
         self.third_button_pressed = False  # Nuovo flag per tracciare se è stato premuto il pulsante metà percorso
 
@@ -65,6 +66,17 @@ class GameBackend:
             self.add_couple(couple_id)
             self.add_single(single_id)
             self.add_charlie_player(charlie_id)
+
+    def add_charlie_player(self, player_id):
+        """Aggiunge un giocatore alla coda Charlie"""
+        if not any(p['id'] == player_id for p in self.queue_charlie):
+            self.queue_charlie.append({
+                'id': player_id,
+                'timestamp': self.get_current_time()
+            })
+            if not self.next_charlie_player and not self.next_charlie_player_locked:
+                self.next_charlie_player = player_id
+                self.next_charlie_player_locked = True
 
     def record_couple_game(self, mid_time, total_time):
         """
@@ -99,7 +111,6 @@ class GameBackend:
         minutes = int(time_in_minutes)
         seconds = int((time_in_minutes - minutes) * 60)
         return f"{minutes}m {seconds}s"
-
     def get_leaderboard(self):
         """
         Restituisce la classifica dei giocatori in base ai tempi medi di gioco.
@@ -319,12 +330,15 @@ class GameBackend:
 
         return couples_board, singles_board, charlie_board
 
+
     def start_game(self, is_couple=True):
         """Avvia un nuovo game e rimuove il giocatore dalla coda"""
         if is_couple:
             if self.queue_couples:
                 player = self.queue_couples.pop(0)
-                self.couple_in_bravo = False
+                self.couple_in_bravo = True
+                self.couple_in_alfa = True
+                self.single_in_alfa = False
                 self.third_button_pressed = False  # Reset del flag all'inizio di un nuovo game coppia
                 if player['id'] == self.next_player:
                     self.next_player = None
@@ -333,14 +347,15 @@ class GameBackend:
             if self.queue_singles:
                 player = self.queue_singles.pop(0)
                 self.single_in_alfa = True    # Imposta il flag
-                if player['id'] == self.next_player:
-                    self.next_player = None
-                    self.next_player_locked = False
+                self.couple_in_alfa = False
+            if player['id'] == self.next_player:
+                self.next_player = None
+                self.next_player_locked = False
 
     def button_third_pressed(self):
         """Gestisce la pressione del pulsante metà percorso"""
         self.couple_in_bravo = True
-        self.single_in_alfa = False
+        self.couple_in_alfa = False
         self.third_button_pressed = True
         self.ALFA_next_available = self.get_current_time()
 
