@@ -164,6 +164,8 @@ def simulate():
     bravo_remaining = max(0, (backend.BRAVO_next_available - now).total_seconds() / 60)
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
 
+    durations = backend.get_durations()
+
     return jsonify(
         couples=formatted_couples_board, 
         singles=formatted_singles_board,
@@ -180,7 +182,9 @@ def simulate():
         charlie_status='Occupata' if charlie_remaining > 0 else 'Libera',
         alfa_remaining=f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
         bravo_remaining=f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
-        charlie_remaining=f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
+        charlie_remaining=f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min",
+        alfa_duration=durations.get('alfa', "N/D"),
+        bravo_duration=durations.get('bravo', "N/D")
     )
 
 @app.route('/button_press', methods=['POST'])
@@ -193,7 +197,6 @@ def button_press():
         if not backend.queue_couples:
             return jsonify(success=False, error="La coda delle coppie è vuota. Non è possibile avviare il gioco.")
         
-
         backend.start_game(is_couple=True)
         return jsonify(success=True, start_time=now.isoformat(), current_player_bravo=backend.current_player_bravo , current_player_alfa=backend.current_player_alfa)
     
@@ -208,13 +211,23 @@ def button_press():
         # Logica per fermare un gioco di coppia
         if not backend.can_stop_couple():
             return jsonify(success=False, error="Non è possibile fermare la coppia senza aver prima inserito il codice di metà percorso")
-        backend.record_couple_game(backend.T_mid, (now - backend.ALFA_next_available).total_seconds() / 60)
-        return jsonify(success=True)
+        if backend.current_player_couple:
+            backend.record_couple_game(backend.T_mid, (now - backend.player_start_times[backend.current_player_couple['id']]).total_seconds() / 60)
+            return jsonify(success=True)
+        else:
+            return jsonify(success=False, error="Nessuna coppia in pista.")
     
     elif button == 'second_stop':
         # Logica per fermare un gioco singolo
-        backend.record_single_game((now - backend.ALFA_next_available).total_seconds() / 60)
-        return jsonify(success=True)
+        if backend.current_player_alfa:
+            player_id = backend.current_player_alfa.get('id')
+            if player_id and player_id in backend.player_start_times:
+                backend.record_single_game((now - backend.player_start_times[player_id]).total_seconds() / 60)
+                return jsonify(success=True)
+            else:
+                return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore singolo.")
+        else:
+            return jsonify(success=False, error="Nessun giocatore singolo in pista ALFA.")
     
     elif button == 'third':
         backend.button_third_pressed()
@@ -227,8 +240,11 @@ def button_press():
         return jsonify(success=True)
     
     elif button == 'charlie_stop':
-        backend.record_charlie_game((now - backend.CHARLIE_next_available).total_seconds() / 60)
-        return jsonify(success=True)
+        if backend.current_player_charlie:
+            backend.record_charlie_game((now - backend.player_start_times[backend.current_player_charlie['id']]).total_seconds() / 60)
+            return jsonify(success=True)
+        else:
+            return jsonify(success=False, error="Nessun giocatore in pista CHARLIE.")
     
     return jsonify(success=False, error="Pulsante non riconosciuto")
 

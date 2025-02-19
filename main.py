@@ -83,6 +83,9 @@ class GameBackend:
         #     self.add_single(single_id)
         #     self.add_charlie_player(charlie_id)
 
+        self.player_start_times: Dict[str, datetime.datetime] = {}
+        self.player_durations: Dict[str, float] = {}
+
     def add_couple(self, couple_id, name) -> None:
         self.queue_couples.append({'id': couple_id, 'arrival': self.get_current_time()})
         self.player_names[couple_id] = name
@@ -119,27 +122,46 @@ class GameBackend:
         self.couple_in_bravo = False
         self.update_averages()
         self.update_next_player()
+        # Record the duration
+        player_id = self.current_player_couple['id']
+        start_time = self.player_start_times.pop(player_id, None)
+        if start_time:
+            duration = (self.get_current_time() - start_time).total_seconds() / 60
+            self.player_durations[player_id] = duration
 
     def record_single_game(self, game_time: float) -> None:
         """
         Registra il tempo (in minuti) relativo a un game singolo (durata in cui ALFA è occupata).
         Dopo la registrazione, aggiorna i tempi medi.
         """
-        self.single_history.append(game_time)
-        self.update_averages()
-        self.current_player_alfa = None
-        if self.couple_in_bravo and self.queue_singles:
-            self.next_player_id = self.queue_singles[0]['id']
-            self.next_player_name = self.get_player_name(self.next_player_id)
-            self.next_player_locked = True
-        else:
-            self.update_next_player()
+        if self.current_player_alfa:
+            player_id = self.current_player_alfa['id']
+            self.single_history.append(game_time)
+            self.update_averages()
+            self.current_player_alfa = None
+            if self.couple_in_bravo and self.queue_singles:
+                self.next_player_id = self.queue_singles[0]['id']
+                self.next_player_name = self.get_player_name(self.next_player_id)
+                self.next_player_locked = True
+            else:
+                self.update_next_player()
+            # Record the duration
+            start_time = self.player_start_times.pop(player_id, None)
+            if start_time:
+                duration = (self.get_current_time() - start_time).total_seconds() / 60
+                self.player_durations[player_id] = duration
 
     def record_charlie_game(self, game_time: float) -> None:
         """Registra il tempo (in minuti) relativo a un game charlie"""
         self.charlie_history.append(game_time)
         self.update_averages()
-        
+        # Record the duration
+        player_id = self.current_player_charlie['id']
+        start_time = self.player_start_times.pop(player_id, None)
+        if start_time:
+            duration = (self.get_current_time() - start_time).total_seconds() / 60
+            self.player_durations[player_id] = duration
+
     def format_time(self, time_in_minutes: float) -> str:
         """Formatta il tempo in minuti e secondi"""
         minutes = int(time_in_minutes)
@@ -275,6 +297,7 @@ class GameBackend:
                 self.current_player_bravo = self.current_player_couple
                 self.couple_in_alfa = True
                 self.couple_in_bravo = True
+                self.player_start_times[self.current_player_couple['id']] = now
                 if self.queue_singles:
                     self.next_player_id = self.queue_singles[0]['id']
                     self.next_player_name = self.get_player_name(self.next_player_id)
@@ -290,6 +313,7 @@ class GameBackend:
                 self.current_player_alfa = self.queue_singles.pop(0)
                 self.single_in_alfa = True
                 self.ALFA_next_available = now + datetime.timedelta(minutes=self.T_single)
+                self.player_start_times[self.current_player_alfa['id']] = now
                 if self.queue_couples:
                     self.next_player_id = self.queue_couples[0]['id']
                     self.next_player_name = self.get_player_name(self.next_player_id)
@@ -561,6 +585,28 @@ class GameBackend:
             else:
                 self.next_charlie_player = None
                 self.next_charlie_player_locked = False
+
+    def get_durations(self) -> Dict[str, str]:
+        """Restituisce le durate dei giocatori attuali in pista formattate in minuti:secondi"""
+        durations = {}
+        now = self.get_current_time()
+        if self.current_player_alfa:
+            player_id = self.current_player_alfa['id']
+            start_time = self.player_start_times.get(player_id)
+            if start_time:
+                duration_seconds = (now - start_time).total_seconds()
+                minutes = int(duration_seconds // 60)
+                seconds = int(duration_seconds % 60)
+                durations['alfa'] = f"{minutes:02}:{seconds:02}"
+        if self.current_player_bravo:
+            player_id = self.current_player_bravo['id']
+            start_time = self.player_start_times.get(player_id)
+            if start_time:
+                duration_seconds = (now - start_time).total_seconds()
+                minutes = int(duration_seconds // 60)
+                seconds = int(duration_seconds % 60)
+                durations['bravo'] = f"{minutes:02}:{seconds:02}"
+        return durations
 
 if __name__ == '__main__':
     backend = GameBackend()

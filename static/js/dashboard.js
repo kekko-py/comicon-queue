@@ -71,15 +71,19 @@ function updateDashboard() {
       // Aggiorna il giocatore corrente in Alfa
       if (data.current_player_alfa) {
         document.getElementById("current-player-alfa").textContent = data.current_player_alfa["id"];
+        document.getElementById("alfa-duration").textContent = data.alfa_duration;
       } else {
         document.getElementById("current-player-alfa").textContent = "Nessun giocatore";
+        document.getElementById("alfa-duration").textContent = "-";
       }
 
       // Aggiorna il giocatore corrente in Bravo
       if (data.current_player_bravo) {
         document.getElementById("current-player-bravo").textContent = data.current_player_bravo.id;
+        document.getElementById("bravo-duration").textContent = data.bravo_duration;
       } else {
         document.getElementById("current-player-bravo").textContent = "Nessun giocatore";
+        document.getElementById("bravo-duration").textContent = "-";
       }
 
       // Aggiorna il giocatore corrente in Charlie
@@ -348,15 +352,19 @@ function updateBoards() {
       // Aggiorna il giocatore corrente in Alfa
       if (data.current_player_alfa) {
         document.getElementById("current-player-alfa").textContent = data.current_player_alfa["id"];
+        document.getElementById("alfa-duration").textContent = data.alfa_duration;
       } else {
         document.getElementById("current-player-alfa").textContent = "Nessun giocatore";
+        document.getElementById("alfa-duration").textContent = "-";
       }
 
       // Aggiorna il giocatore corrente in Bravo
       if (data.current_player_bravo) {
         document.getElementById("current-player-bravo").textContent = data.current_player_bravo.id;
+        document.getElementById("bravo-duration").textContent = data.bravo_duration;
       } else {
         document.getElementById("current-player-bravo").textContent = "Nessun giocatore";
+        document.getElementById("bravo-duration").textContent = "-";
       }
 
       // Aggiorna il giocatore corrente in Charlie
