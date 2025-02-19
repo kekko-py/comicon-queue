@@ -57,7 +57,6 @@ class GameBackend:
         self.next_charlie_player: Optional[str] = None
         self.next_charlie_player_locked: bool = False
         self.current_player_couple: Optional[Queue] = None
-        self.current_player_single: Optional[Queue] = None
         self.player_in_charlie: bool = False
 
         # Flag per tracciare lo stato delle piste
@@ -276,7 +275,7 @@ class GameBackend:
                 self.current_player_bravo = self.current_player_couple
                 self.couple_in_alfa = True
                 self.couple_in_bravo = True
-                if self.queue_singles and self.current_player_single is None:
+                if self.queue_singles:
                     self.next_player_id = self.queue_singles[0]['id']
                     self.next_player_name = self.get_player_name(self.next_player_id)
                     self.next_player_locked = True
@@ -288,11 +287,10 @@ class GameBackend:
                 raise ValueError("No couples in queue to start the game.")
         else:
             if self.queue_singles:
-                self.current_player_single = self.queue_singles.pop(0)
-                self.ALFA_next_available = now + datetime.timedelta(minutes=self.T_single)
-                self.current_player_alfa = self.current_player_single
+                self.current_player_alfa = self.queue_singles.pop(0)
                 self.single_in_alfa = True
-                if self.queue_couples and self.current_player_bravo is None:
+                self.ALFA_next_available = now + datetime.timedelta(minutes=self.T_single)
+                if self.queue_couples:
                     self.next_player_id = self.queue_couples[0]['id']
                     self.next_player_name = self.get_player_name(self.next_player_id)
                     self.next_player_locked = True
