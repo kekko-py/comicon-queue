@@ -55,7 +55,7 @@
                     $('#next-player-btn').prop('disabled', true);
                     $('#start-btn').prop('disabled', true);
                     $('#stop-btn').prop('disabled', false);
-                    $('#current-player').text(response.current_player_alfa.name); // Aggiorna il giocatore corrente
+                    $('#current-player').text(response.current_player_alfa["id"]); // Aggiorna il giocatore corrente
                 } else if (button === 'second_stop' && isGameActive) {
                     isGameActive = false;
                     clearInterval(timerInterval);

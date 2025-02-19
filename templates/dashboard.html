@@ -1,6 +1,8 @@
-{% extends "layout.html" %} {% block extra_css %}
+{% extends "layout.html" %}
+{% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
-{% endblock %} {% block content %}
+{% endblock %}
+{% block content %}
 <h1>Tabellone</h1>
 
 <div class="status-container">
@@ -77,6 +79,7 @@
     <div id="skipped-charlie-buttons"></div>
   </div>
 </div>
-{% endblock %} {% block scripts %}
+{% endblock %}
+{% block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

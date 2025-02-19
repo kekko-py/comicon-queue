@@ -70,7 +70,7 @@ function updateDashboard() {
 
       // Aggiorna il giocatore corrente in Alfa
       if (data.current_player_alfa) {
-        document.getElementById("current-player-alfa").textContent = data.current_player_alfa.id;
+        document.getElementById("current-player-alfa").textContent = data.current_player_alfa["id"];
       } else {
         document.getElementById("current-player-alfa").textContent = "Nessun giocatore";
       }
@@ -221,9 +221,7 @@ function skipCharliePlayer() {
     .then(() => updateDashboard());
 }
 
-// Aggiorna la dashboard ogni secondo
-setInterval(updateDashboard, 1000);
-updateDashboard();
+
 
 // Aggiorna la visualizzazione degli skippati
 function updateSkipped() {
@@ -280,9 +278,15 @@ function updateSkipped() {
 }
 
 // Assicurati che la funzione venga chiamata regolarmente
-setInterval(updateSkipped, 1000);
+setInterval(() => {
+  updateSkipped();
+  updateDashboard();
+}, 1000);
+// Aggiorna la dashboard ogni secondo
+
 $(document).ready(function () {
   updateSkipped();
+  updateDashboard();
 });
 
 function updateBoards() {
@@ -343,7 +347,7 @@ function updateBoards() {
 
       // Aggiorna il giocatore corrente in Alfa
       if (data.current_player_alfa) {
-        document.getElementById("current-player-alfa").textContent = data.current_player_alfa.id;
+        document.getElementById("current-player-alfa").textContent = data.current_player_alfa["id"];
       } else {
         document.getElementById("current-player-alfa").textContent = "Nessun giocatore";
       }

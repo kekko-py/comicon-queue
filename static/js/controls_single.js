@@ -16,7 +16,7 @@ function updateNextPlayer() {
                 $('#next-player-btn').prop('disabled', true);
             }
             if (data.current_player_alfa) {
-                $('#current-player').text(`${data.current_player_alfa.name} - ${data.current_player_alfa.id}`);
+                $('#current-player').text(`-${data.current_player_alfa['id']}`);
             } else {
                 $('#current-player').text('-');
             }
@@ -73,7 +73,7 @@ function pressButton(button) {
                 $('#next-player-btn').prop('disabled', true);
                 $('#start-btn').prop('disabled', true);
                 $('#stop-btn').prop('disabled', false);
-                $('#current-player').text(response.current_player_alfa.name); // Aggiorna il giocatore corrente
+                $('#current-player').text(response.current_player_alfa["id"]); // Aggiorna il giocatore corrente
             } else if (button === 'second_stop' && isGameActive) {
                 isGameActive = false;
                 clearInterval(timerInterval);

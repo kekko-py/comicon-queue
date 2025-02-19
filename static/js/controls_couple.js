@@ -15,11 +15,7 @@ function updateNextPlayer() {
                 $('#next-player').text('-');
                 $('#next-player-btn').prop('disabled', true);
             }
-            if (data.current_player_bravo) {
-                $('#current-player').text(`${data.current_player_bravo.name} - ${data.current_player_bravo.id}`);
-            } else {
-                $('#current-player').text('-');
-            }
+
         });
 }
 

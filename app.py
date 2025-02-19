@@ -237,25 +237,21 @@ def skip_next_player():
     if backend.next_player_id:
         print(f"Current player: {backend.next_player_id}")
         backend.skip_player(backend.next_player_id)
-        is_couple = backend.next_player_id in backend.couples
-        print(f"Is couple: {is_couple}")
-        # Imposta il prossimo giocatore della stessa categoria
+        is_couple = backend.next_player_id.startswith("GIALLO")
+        
+        # Set the next player based on the type and availability in the queue
         if is_couple and backend.queue_couples:
             backend.next_player_id = backend.queue_couples[0]['id']
+            backend.next_player_name = backend.get_player_name(backend.next_player_id)
             backend.next_player_locked = True
         elif not is_couple and backend.queue_singles:
             backend.next_player_id = backend.queue_singles[0]['id']
+            backend.next_player_name = backend.get_player_name(backend.next_player_id)
             backend.next_player_locked = True
         else:
             backend.next_player_id = None
+            backend.next_player_name = None
             backend.next_player_locked = False
-            # Aggiungi una logica per gestire la coda vuota
-            if is_couple:
-                print("La coda delle coppie è vuota.")
-                # Esegui un'azione specifica, come notificare l'utente
-            else:
-                print("La coda dei singoli è vuota.")
-                # Esegui un'azione specifica, come notificare l'utente
 
         print(f"Next player: {backend.next_player_id}")
     
@@ -263,8 +259,14 @@ def skip_next_player():
     can_start_single = not backend.single_in_alfa and backend.queue_singles
     can_start_charlie = not backend.player_in_charlie and backend.queue_charlie
 
-    return jsonify(success=True, can_start_couple=can_start_couple, can_start_single=can_start_single, can_start_charlie=can_start_charlie)
-
+    return jsonify(
+        success=True, 
+        can_start_couple=can_start_couple, 
+        can_start_single=can_start_single, 
+        can_start_charlie=can_start_charlie,
+        next_player_id=backend.next_player_id,
+        next_player_name=backend.next_player_name
+    )
 
 @app.route('/skip_charlie_player', methods=['POST'])
 def skip_charlie_player():
@@ -288,19 +290,13 @@ def get_skipped():
         'charlie': [{'id': p['id']} for p in backend.skipped_charlie]
     })
 
-@app.route('/restore_skipped', methods=['POST'])
+@app.route('/restore_skipped_as_next', methods=['POST'])
 def restore_skipped():
     player_id = request.json.get('id')
     if player_id:
-        backend.restore_skipped(player_id)
-    return jsonify(success=True)
-
-@app.route('/restore_skipped_as_next', methods=['POST'])
-def restore_skipped_as_next():
-    player_id = request.json.get('id')
-    if player_id:
         backend.restore_skipped_as_next(player_id)
-    return jsonify(success=True)
+        return jsonify(success=True)
+    return jsonify(success=False, error="Player ID is required"), 400
 
 @app.route('/check_availability', methods=['GET'])
 def check_availability():
