@@ -1,10 +1,9 @@
-{% extends "layout.html" %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-{% endblock %}
-
-{% block content %}
+{% extends "layout.html" %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+/>
+{% endblock %} {% block content %}
 <h1>Tabellone</h1>
 
 <div class="status-container">
@@ -35,9 +34,9 @@
   <div class="next-player-card">
     <div class="next-player-title">Prossimo Giocatore ALFA/BRAVO:</div>
     <div class="next-player" id="next-player">
-      <span id="next-player-text">-</span>
+      <span id="next-player-text">Nessun Giocatore In Coda</span>
     </div>
-    <img src="/static/icons/Vector.svg" class="player-icon" alt="Player Icon">
+    <img src="/static/icons/Vector.svg" class="player-icon" alt="Player Icon" />
     <button class="skip-button" onclick="skipNextPlayer()">
       SKIP <span class="skip-icon">>></span>
     </button>
@@ -46,7 +45,9 @@
   <!-- Card per Charlie -->
   <div class="next-player-card">
     <div class="next-player-title">Prossimo Giocatore CHARLIE:</div>
-    <div class="next-player-id" id="next-charlie-player">-</div>
+    <div class="next-player-id" id="next-charlie-player">
+      Nessun Giocatore In Coda
+    </div>
     <button class="skip-button" onclick="skipCharliePlayer()">
       SKIP <span class="skip-icon">>></span>
     </button>
@@ -79,8 +80,6 @@
     <div id="skipped-charlie-buttons"></div>
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+{% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

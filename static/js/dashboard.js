@@ -87,10 +87,20 @@ function skipNextPlayer() {
       },
       body: JSON.stringify({ id: nextPlayer }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Errore nella chiamata di skip");
+        }
+        return response.json();
+      })
       .then(() => {
         fetch("/simulate")
-          .then((response) => response.json())
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Errore nella chiamata di simulate");
+            }
+            return response.json();
+          })
           .then((data) => {
             // Prima controlla se ci sono coppie
             if (data.couples && data.couples.length > 0) {
@@ -108,7 +118,13 @@ function skipNextPlayer() {
             }
             updateDashboard();
             updateSkipped();
+          })
+          .catch((error) => {
+            console.error("Errore durante la chiamata di simulate:", error);
           });
+      })
+      .catch((error) => {
+        console.error("Errore durante la chiamata di skip:", error);
       });
   }
 }
@@ -199,9 +215,11 @@ function updateDashboard() {
         charlieBoard.appendChild(li);
       });
 
-      // Aggiorna i prossimi giocatori
-      document.getElementById("next-player-text").textContent =
-        data.next_player || "-";
+      if (data.next_player_id && data.next_player_name) {
+        document.getElementById("next-player-text").textContent =
+          `${data.next_player_id}` || "nessun giocatore in coda";
+      }
+
       document.getElementById("next-charlie-player").textContent =
         data.next_charlie_player || "-";
     });
