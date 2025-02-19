@@ -107,6 +107,7 @@ function skipNextPlayer() {
               document.getElementById("next-player-text").textContent =
                 data.couples[0][1];
             }
+
             // Se non ci sono coppie, controlla i singoli
             else if (data.singles && data.singles.length > 0) {
               document.getElementById("next-player-text").textContent =
@@ -188,7 +189,6 @@ function updateDashboard() {
         couplesBoard.appendChild(li);
       });
 
-
       // Aggiorna la coda singoli
       const singlesBoard = document.getElementById("singles-board");
       singlesBoard.innerHTML = "";
@@ -202,6 +202,7 @@ function updateDashboard() {
         li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
         singlesBoard.appendChild(li);
       });
+
       // se non ci sono singoli ne coppie in coda nella board, resettami il prossimo giocatore
       if (data.couples.length === 0 && data.singles.length === 0) {
         document.getElementById("next-player-text").textContent = "Nessun Giocatore in coda";
@@ -227,6 +228,25 @@ function updateDashboard() {
 
       document.getElementById("next-charlie-player").textContent =
         data.next_charlie_player || "-";
+
+      // Aggiorna il giocatore corrente in Alfa
+      if (data.current_player_alfa) {
+        document.getElementById("current-player-alfa").textContent = data.current_player_alfa.id      // Aggiorna il giocatore corrente in Alfa
+          ;
+      }
+      // Aggiorna il giocatore corrente in Bravo
+      if (data.current_player_bravo) {
+        document.getElementById("current-player-bravo").textContent = data.current_player_bravo.id      // Aggiorna il giocatore corrente in Bravo
+          ;
+      }
+      // Aggiorna il giocatore corrente se non c'è nessuno
+      if (!data.current_player_alfa) {
+        document.getElementById("current-player-alfa").textContent = "Nessun giocatore";
+      }
+      // Aggiorna il giocatore corrente se non c'è nessuno
+      if (!data.current_player_bravo) {
+        document.getElementById("current-player-bravo").textContent = "Nessun giocatore";
+      }
     });
 
   // Aggiorna la visualizzazione degli skippati
