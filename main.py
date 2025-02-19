@@ -114,8 +114,6 @@ class GameBackend:
         """
         self.couple_history_mid.append(mid_time)
         self.couple_history_total.append(total_time)
-        # Libera ALFA (la coppia ha abbandonato ALFA tramite il tastierino)
-        self.current_player_alfa = None
         # Mantiene la pista BRAVO occupata fino alla fine del game di coppia
         self.current_player_bravo = None  
         self.couple_in_alfa = False
@@ -211,6 +209,7 @@ class GameBackend:
         considerando l'orario di entrata (campo 'arrival') oppure la priorità,
         in modo che il prossimo giocatore da entrare venga mostrato nella finestra "Prossimo ingresso".
         """
+        print("update_next_player",   self.current_player_alfa is None and self.current_player_bravo is not None)
         if self.current_player_alfa is None and self.current_player_bravo is not None:
             if self.queue_singles:
                 self.next_player_id = self.queue_singles[0]['id']

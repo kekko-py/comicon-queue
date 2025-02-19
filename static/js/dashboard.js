@@ -188,6 +188,7 @@ function updateDashboard() {
         couplesBoard.appendChild(li);
       });
 
+
       // Aggiorna la coda singoli
       const singlesBoard = document.getElementById("singles-board");
       singlesBoard.innerHTML = "";
@@ -201,6 +202,10 @@ function updateDashboard() {
         li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
         singlesBoard.appendChild(li);
       });
+      // se non ci sono singoli ne coppie in coda nella board, resettami il prossimo giocatore
+      if (data.couples.length === 0 && data.singles.length === 0) {
+        document.getElementById("next-player-text").textContent = "Nessun Giocatore in coda";
+      }
 
       // Aggiorna la coda Charlie
       const charlieBoard = document.getElementById("charlie-board");
