@@ -10,12 +10,11 @@ function updateNextPlayer() {
                 const nextPlayer = data.couples[0];  // Ora sarà un oggetto con id e name
                 $('#next-player').text(`${nextPlayer.name} - ${nextPlayer.id}`);
                 $('#next-player-btn').prop('disabled', false);
-                console.log(`Next player to start: ${nextPlayer.name}`);  // Log del prossimo giocatore
+                console.log(`Next player to start: ${nextPlayer.name} - ${nextPlayer.id}`);  // Log del prossimo giocatore
             } else {
                 $('#next-player').text('-');
                 $('#next-player-btn').prop('disabled', true);
             }
-
         });
 }
 
@@ -69,7 +68,7 @@ function pressButton(button) {
                 $('#next-player-btn').prop('disabled', true);
                 $('#start-btn').prop('disabled', true);
                 $('#stop-btn').prop('disabled', false);
-                $('#current-player').text(response.current_player_bravo.name); // Aggiorna il giocatore corrente
+                $('#current-player').text(response.current_player_bravo.id); // Aggiorna il giocatore corrente
             } else if (button === 'first_stop' && isGameActive) {
                 isGameActive = false;
                 clearInterval(timerInterval);
@@ -90,7 +89,7 @@ function pressButton(button) {
 function skipPlayer() {
     const currentPlayer = $('#current-player').text();
     if (currentPlayer !== '-') {
-        fetch('/skip_player', {
+        fetch('/skip_next_player', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
