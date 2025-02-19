@@ -434,36 +434,62 @@ class GameBackend:
         """Verifica se una coppia può fermarsi"""
         return self.third_button_pressed
 
-    def skip_player(self, player_name: str) -> None:
+    def skip_player(self, player_id: str) -> None:
         """Sposta un giocatore nella lista degli skippati"""
-        # Per le coppie, confronta il nome tramite player_names
-        player = next((c for c in self.queue_couples if self.player_names.get(c['id']) == player_name), None)
+        player = next((c for c in self.queue_couples if c['id'] == player_id), None)
         if player:
-            self.queue_couples = [c for c in self.queue_couples if self.player_names.get(c['id']) != player_name]
+            self.queue_couples.remove(player)
             self.skipped_couples.append(player)
         else:
-            player = next((s for s in self.queue_singles if self.player_names.get(s['id']) == player_name), None)
+            player = next((s for s in self.queue_singles if s['id'] == player_id), None)
             if player:
-                self.queue_singles = [s for s in self.queue_singles if self.player_names.get(s['id']) != player_name]
+                self.queue_singles.remove(player)
                 self.skipped_singles.append(player)
+            else:
+                player = next((p for p in self.queue_charlie if p['id'] == player_id), None)
+                if player:
+                    self.queue_charlie.remove(player)
+                    self.skipped_charlie.append(player)
 
-    def restore_skipped(self, player_name: str) -> None:
-        """Ripristina un giocatore skippato dopo il prossimo ingresso se presente"""
-        player = next((c for c in self.skipped_couples if self.player_names.get(c['id']) == player_name), None)
+    def restore_skipped(self, player_id: str) -> None:
+        """Ripristina un giocatore skippato in coda come priorità"""
+        player = next((c for c in self.skipped_couples if c['id'] == player_id), None)
         if player:
-            self.skipped_couples = [c for c in self.skipped_couples if self.player_names.get(c['id']) != player_name]
+            self.skipped_couples.remove(player)
             self.queue_couples.insert(0, player)
         else:
-            player = next((s for s in self.skipped_singles if self.player_names.get(s['id']) == player_name), None)
+            player = next((s for s in self.skipped_singles if s['id'] == player_id), None)
             if player:
-                self.skipped_singles = [s for s in self.skipped_singles if self.player_names.get(s['id']) != player_name]
+                self.skipped_singles.remove(player)
                 self.queue_singles.insert(0, player)
-        # Per i giocatori Charlie, si confronta comunque tramite 'id'
-        player = next((p for p in self.skipped_charlie if p['id'] == player_name), None)
+            else:
+                player = next((p for p in self.skipped_charlie if p['id'] == player_id), None)
+                if player:
+                    self.skipped_charlie.remove(player)
+                    self.queue_charlie.insert(0, player)
+
+    def restore_skipped_as_next(self, player_id: str) -> None:
+        """Ripristina un giocatore skippato come prossimo nella coda"""
+        player = next((c for c in self.skipped_couples if c['id'] == player_id), None)
         if player:
-            self.skipped_charlie.remove(player)
-            # Se la chiave "name" non fosse presente, si utilizza player_names
-            self.add_charlie_player(player_name, player.get('name', self.player_names.get(player_name, "")))
+            self.skipped_couples.remove(player)
+            self.queue_couples.insert(0, player)
+            self.next_player_id = player_id
+            self.next_player_locked = True
+        else:
+            player = next((s for s in self.skipped_singles if s['id'] == player_id), None)
+            if player:
+                self.skipped_singles.remove(player)
+                self.queue_singles.insert(0, player)
+                self.next_player_id = player_id
+                self.next_player_locked = True
+            else:
+                player = next((p for p in self.skipped_charlie if p['id'] == player_id), None)
+                if player:
+                    self.skipped_charlie.remove(player)
+                    self.queue_charlie.insert(0, player)
+                    self.next_charlie_player = player_id
+                    self.next_charlie_player_locked = True
 
     def start_charlie_game(self) -> None:
         """Avvia un gioco sulla pista Charlie"""

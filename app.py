@@ -138,21 +138,7 @@ def simulate():
     current_player_bravo = backend.current_player_bravo
     current_player_charlie = backend.current_player_charlie
 
-    return jsonify(
-        couples=formatted_couples_board, 
-        singles=formatted_singles_board,
-        charlie=formatted_charlie_board,
-        next_player_id=next_player_id,
-        next_player_name=next_player_name,
-        next_charlie_player=next_charlie_player,
-        current_player_alfa=current_player_alfa,
-        current_player_bravo=current_player_bravo,
-        current_player_charlie=current_player_charlie,
-        player_icon_url=url_for('static', filename='icons/Vector.svg')
-    )
-
-@app.route('/get_status', methods=['GET'])
-def get_status():
+    # Informazioni di stato
     single_in_alfa = (
         isinstance(backend.current_player_alfa, dict) and
         'name' in backend.current_player_alfa and
@@ -169,12 +155,6 @@ def get_status():
         backend.current_player_bravo['name'] == "GIALLO"
     )
 
-    print({
-        'single_in_alfa': single_in_alfa,
-        'couple_in_alfa': couple_in_alfa,
-        'couple_in_bravo': couple_in_bravo,
-        'third_button_pressed': backend.third_button_pressed
-    })
     now = backend.get_current_time()
     backend.ALFA_next_available = backend.localize_time(backend.ALFA_next_available)
     backend.BRAVO_next_available = backend.localize_time(backend.BRAVO_next_available)
@@ -183,15 +163,25 @@ def get_status():
     alfa_remaining = max(0, (backend.ALFA_next_available - now).total_seconds() / 60)
     bravo_remaining = max(0, (backend.BRAVO_next_available - now).total_seconds() / 60)
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
-    
-    return jsonify({
-        'alfa_status': 'Occupata' if backend.current_player_alfa else 'Libera',
-        'bravo_status': 'Occupata' if backend.current_player_bravo else 'Libera',
-        'charlie_status': 'Occupata' if charlie_remaining > 0 else 'Libera',
-        'alfa_remaining': f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
-        'bravo_remaining': f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
-        'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
-    })
+
+    return jsonify(
+        couples=formatted_couples_board, 
+        singles=formatted_singles_board,
+        charlie=formatted_charlie_board,
+        next_player_id=next_player_id,
+        next_player_name=next_player_name,
+        next_charlie_player=next_charlie_player,
+        current_player_alfa=current_player_alfa,
+        current_player_bravo=current_player_bravo,
+        current_player_charlie=current_player_charlie,
+        player_icon_url=url_for('static', filename='icons/Vector.svg'),
+        alfa_status='Occupata' if backend.current_player_alfa else 'Libera',
+        bravo_status='Occupata' if backend.current_player_bravo else 'Libera',
+        charlie_status='Occupata' if charlie_remaining > 0 else 'Libera',
+        alfa_remaining=f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
+        bravo_remaining=f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
+        charlie_remaining=f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
+    )
 
 @app.route('/button_press', methods=['POST'])
 def button_press():
@@ -303,6 +293,13 @@ def restore_skipped():
     player_id = request.json.get('id')
     if player_id:
         backend.restore_skipped(player_id)
+    return jsonify(success=True)
+
+@app.route('/restore_skipped_as_next', methods=['POST'])
+def restore_skipped_as_next():
+    player_id = request.json.get('id')
+    if player_id:
+        backend.restore_skipped_as_next(player_id)
     return jsonify(success=True)
 
 @app.route('/check_availability', methods=['GET'])
