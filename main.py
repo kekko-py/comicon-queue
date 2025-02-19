@@ -262,6 +262,9 @@ class GameBackend:
                 self.current_player_bravo = self.current_player_couple
                 self.couple_in_alfa = True
                 self.couple_in_bravo = True
+                # il prossimo giocatore sara un singolo
+                self.next_player_id = self.queue_singles[0]['id']
+                self.next_player_name= self.get_player_name(self.next_player_id)
             else:
                 raise ValueError("No couples in queue to start the game.")
         else:
@@ -270,6 +273,9 @@ class GameBackend:
                 self.ALFA_next_available = now + datetime.timedelta(minutes=self.T_single)
                 self.current_player_alfa = self.current_player_single
                 self.single_in_alfa = True
+                # il prossimo giocatore sara una coppia
+                self.next_player_id = self.queue_couples[0]['id']
+                self.next_player_name= self.get_player_name(self.next_player_id)
             else:
                 raise ValueError("No singles in queue to start the game.")
 
