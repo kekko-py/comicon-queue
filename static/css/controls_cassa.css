@@ -71,10 +71,23 @@
 }
 
 .btn-add {
-    background: #4CAF50;
-    color: white;
     width: 100%;
     margin-top: 1rem;
+}
+
+.btn-yellow {
+    background: #FFEB3B;
+    color: black;
+}
+
+.btn-blue {
+    background: #2196F3;
+    color: white;
+}
+
+.btn-green {
+    background: #4CAF50;
+    color: white;
 }
 
 .btn-start:hover:not(:disabled) {

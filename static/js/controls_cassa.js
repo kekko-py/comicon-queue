@@ -37,6 +37,7 @@ document.getElementById('add-couple-btn').addEventListener('click', function () 
     if (coupleCounter <= 100) {
         addPlayer('couple', coupleCounter, 'GIALLO');
         coupleCounter++;
+        this.textContent = `Aggiungi Coppia (GIALLO) ${coupleCounter}`;
     } else {
         alert('Limite massimo di 100 coppie raggiunto.');
     }
@@ -46,6 +47,7 @@ document.getElementById('add-single-btn').addEventListener('click', function () 
     if (singleCounter <= 100) {
         addPlayer('single', singleCounter, 'BLU');
         singleCounter++;
+        this.textContent = `Aggiungi Singolo (BLU) ${singleCounter}`;
     } else {
         alert('Limite massimo di 100 singoli raggiunto.');
     }
@@ -55,6 +57,7 @@ document.getElementById('add-charlie-btn').addEventListener('click', function ()
     if (charlieCounter <= 100) {
         addPlayer('charlie', charlieCounter, 'VERDE');
         charlieCounter++;
+        this.textContent = `Aggiungi Charlie (VERDE) ${charlieCounter}`;
     } else {
         alert('Limite massimo di 100 Charlie raggiunto.');
     }
