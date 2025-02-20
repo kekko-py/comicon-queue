@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-from main import GameBackend  # Assicurati che il tuo file principale si chiami main.py
+from main import GameBackend
 import datetime
 import os
 import pytz
@@ -7,27 +7,13 @@ import pytz
 app = Flask(__name__)
 backend = GameBackend()
 
-# Sostituisci @app.before_first_request con questa implementazione
 def initialize_queues():
     rome_tz = pytz.timezone('Europe/Rome')
     now = datetime.datetime.now(rome_tz)
-    
-    # Svuota le code esistenti
     backend.queue_couples.clear()
     backend.queue_singles.clear()
     backend.queue_charlie.clear()
-    
-    # Popola le code con 10 elementi ciascuna
-    # for i in range(1, 11):
-    #     couple_id = f"GIALLO-{i:02d}"  # Genera C01, C02, ..., C10
-    #     single_id = f"BLU-{i:02d}"  # Genera S01, S02, ..., S10
-    #     charlie_id = f"VERDE-{i:02d}"  # Genera G01, G02, ..., G10
-        
-    #     backend.add_couple(couple_id)
-    #     backend.add_single(single_id)
-    #     backend.add_charlie_player(charlie_id)
 
-# Chiama l'inizializzazione subito dopo la creazione dell'app
 initialize_queues()
 
 @app.route('/')
@@ -45,7 +31,6 @@ def controls_couple():
 @app.route('/controls/single')
 def controls_single():
     return render_template('controls_single.html')
-
 
 @app.route('/controls/charlie')
 def controls_charlie():
@@ -72,9 +57,9 @@ def dashboard():
 @app.route('/add_couple', methods=['POST'])
 def add_couple():
     id = request.json.get('id')
-    if not id:
-        return jsonify(success=False, error="id is required"), 400
-    name = "GIALLO"
+    name = request.json.get('name')
+    if not id or not name:
+        return jsonify(success=False, error="ID and name are required"), 400
     couple_id = f"{name}-{int(id):02d}"
     backend.add_couple(couple_id, name)
     return jsonify(success=True)
@@ -82,9 +67,9 @@ def add_couple():
 @app.route('/add_single', methods=['POST'])
 def add_single():
     id = request.json.get('id')
-    if not id:
-        return jsonify(success=False, error="id is required"), 400
-    name = "BLU"
+    name = request.json.get('name')
+    if not id or not name:
+        return jsonify(success=False, error="ID and name are required"), 400
     single_id = f"{name}-{int(id):02d}"
     backend.add_single(single_id, name)
     return jsonify(success=True)
@@ -92,9 +77,9 @@ def add_single():
 @app.route('/add_charlie', methods=['POST'])
 def add_charlie():
     id = request.json.get('id')
-    if not id:
-        return jsonify(success=False, error="id is required"), 400
-    name = "VERDE"
+    name = request.json.get('name')
+    if not id or not name:
+        return jsonify(success=False, error="ID and name are required"), 400
     charlie_id = f"{name}-{int(id):02d}"
     backend.add_charlie_player(charlie_id, name)
     return jsonify(success=True)
@@ -108,7 +93,6 @@ def add_charlie_player():
     player_id = f"{name.upper()}-{int(id):02d}"
     backend.add_charlie_player(player_id, name)
     
-    # Update the next Charlie player
     if not backend.next_player_charlie_id and backend.queue_charlie:
         backend.next_player_charlie_id = backend.queue_charlie[0]['id']
         backend.next_player_charlie_name = backend.get_player_name(backend.next_player_charlie_id)
@@ -123,40 +107,35 @@ def simulate():
     next_player_charlie_id = backend.next_player_charlie_id
     next_player_charlie_name = backend.next_player_charlie_name
     
-    # Formatta la coda Charlie nello stesso modo delle altre code
     formatted_charlie_board = []
     for pos, player_id, time_est in charlie_board:
         formatted_charlie_board.append({
-            'id': player_id,  # ID del giocatore
-            'name': backend.get_player_name(player_id),  # Nome del giocatore
-            'estimated_time': time_est  # Orario stimato
+            'id': player_id,
+            'name': backend.get_player_name(player_id),
+            'estimated_time': time_est
         })
     
-    # Formatta la coda delle coppie
     formatted_couples_board = []
     for pos, player_id, time_est in couples_board:
         formatted_couples_board.append({
-            'id': player_id,  # ID del giocatore
-            'name': backend.get_player_name(player_id),  # Nome del giocatore
-            'estimated_time': time_est  # Orario stimato
+            'id': player_id,
+            'name': backend.get_player_name(player_id),
+            'estimated_time': time_est
         })
     
-    # Formatta la coda dei singoli
     formatted_singles_board = []
     for pos, player_id, time_est in singles_board:
         formatted_singles_board.append({
-            'id': player_id,  # ID del giocatore
-            'name': backend.get_player_name(player_id),  # Nome del giocatore
-            'estimated_time': time_est  # Orario stimato
+            'id': player_id,
+            'name': backend.get_player_name(player_id),
+            'estimated_time': time_est
         })
     
-    # Aggiungi il nome del giocatore per il prossimo giocatore
     next_player_alfa_bravo_name = backend.get_player_name(next_player_alfa_bravo_id) if next_player_alfa_bravo_id else None
     current_player_alfa = backend.current_player_alfa
     current_player_bravo = backend.current_player_bravo
     current_player_charlie = backend.current_player_charlie
 
-    # Informazioni di stato
     single_in_alfa = (
         isinstance(backend.current_player_alfa, dict) and
         'name' in backend.current_player_alfa and
@@ -213,7 +192,6 @@ def button_press():
     now = backend.get_current_time()
     
     if button == 'first_start':
-        # Logica per avviare un gioco di coppia
         if not backend.queue_couples:
             return jsonify(success=False, error="La coda delle coppie è vuota. Non è possibile avviare il gioco.")
         
@@ -221,14 +199,12 @@ def button_press():
         return jsonify(success=True, start_time=now.isoformat(), current_player_bravo=backend.current_player_bravo , current_player_alfa=backend.current_player_alfa)
     
     elif button == 'second_start':
-        # Logica per avviare un gioco singolo
         if not backend.queue_singles:
             return jsonify(success=False, error="La coda dei singoli è vuota. Non è possibile avviare il gioco.")
         backend.start_game(is_couple=False)
         return jsonify(success=True, start_time=now.isoformat(), current_player_alfa=backend.current_player_alfa) 
     
     elif button == 'first_stop':
-        # Logica per fermare un gioco di coppia
         if not backend.can_stop_couple():
             return jsonify(success=False, error="Non è possibile fermare la coppia senza aver prima inserito il codice di metà percorso")
         if backend.current_player_couple:
@@ -238,7 +214,6 @@ def button_press():
             return jsonify(success=False, error="Nessuna coppia in pista.")
     
     elif button == 'second_stop':
-        # Logica per fermare un gioco singolo
         if backend.current_player_alfa:
             player_id = backend.current_player_alfa.get('id')
             if player_id and player_id in backend.player_start_times:
@@ -260,12 +235,11 @@ def button_press():
         return jsonify(success=True, current_player_charlie=backend.current_player_charlie)
     
     elif button == 'charlie_stop':
-        # Logica per fermare un gioco charlie
         if backend.current_player_charlie:
             player_id = backend.current_player_charlie.get('id')
             if player_id and player_id in backend.player_start_times:
                 backend.record_charlie_game((now - backend.player_start_times[player_id]).total_seconds() / 60)
-                backend.current_player_charlie = None  # Libera la pista Charlie
+                backend.current_player_charlie = None
                 return jsonify(success=True)
             else:
                 return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Charlie.")
@@ -279,7 +253,6 @@ def skip_next_player_alfa_bravo():
         backend.skip_player(player_id)
         is_couple = player_id.startswith("GIALLO")
         
-        # Set the next player based on the type and availability in the queue
         if is_couple and backend.queue_couples:
             backend.next_player_alfa_bravo_id = backend.queue_couples[0]['id']
             backend.next_player_alfa_bravo_name = backend.get_player_name(backend.next_player_alfa_bravo_id)
@@ -335,13 +308,12 @@ def restore_skipped():
 def check_availability():
     now = backend.get_current_time()
     
-    # Verifica disponibilità ALFA e BRAVO
     alfa_available = (backend.current_player_alfa is None ) 
     bravo_available = (backend.current_player_bravo is None )
     
     return jsonify({
-        'can_start_couple': alfa_available and bravo_available ,  # Coppia ha bisogno di entrambe le piste
-        'can_start_single': alfa_available,  # Singolo ha bisogno solo di ALFA
+        'can_start_couple': alfa_available and bravo_available , 
+        'can_start_single': alfa_available, 
         'alfa_status': 'Libera' if alfa_available else 'Occupata',
         'bravo_status': 'Libera' if bravo_available else 'Occupata'
     })
