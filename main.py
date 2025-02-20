@@ -612,6 +612,14 @@ class GameBackend:
                 minutes = int(duration_seconds // 60)
                 seconds = int(duration_seconds % 60)
                 durations['bravo'] = f"{minutes:02}:{seconds:02}"
+        if self.current_player_charlie:
+            player_id = self.current_player_charlie['id']
+            start_time = self.player_start_times.get(player_id)
+            if start_time:
+                duration_seconds = (now - start_time).total_seconds()
+                minutes = int(duration_seconds // 60)
+                seconds = int(duration_seconds % 60)
+                durations['charlie'] = f"{minutes:02}:{seconds:02}"
         return durations
 
 if __name__ == '__main__':
