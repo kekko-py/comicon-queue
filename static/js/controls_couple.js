@@ -86,24 +86,6 @@ function pressButton(button) {
     });
 }
 
-function skipPlayer() {
-    const currentPlayer = $('#current-player').text();
-    if (currentPlayer !== '-') {
-        fetch('/skip_next_player', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: currentPlayer })
-        })
-            .then(response => response.json())
-            .then(() => {
-                // Dopo lo skip, aggiorna immediatamente per mostrare il prossimo giocatore dello stesso tipo
-                updateNextPlayer();
-            });
-    }
-}
-
 // timer per aggiornare la disponibilità delle piste e prossimo giocatore
 setInterval(() => {
     updateAvailability();

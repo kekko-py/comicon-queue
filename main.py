@@ -52,10 +52,11 @@ class GameBackend:
 
         # Variabili per la gestione dei giocatori
         self.next_player_alfa_bravo_id: Optional[str] = None
-        self.next_player_locked: bool = False
+        self.next_player_alfa_bravo_locked: bool = False
         self.next_player_alfa_bravo_name: Optional[str] = None
-        self.next_charlie_player: Optional[str] = None
-        self.next_charlie_player_locked: bool = False
+        self.next_player_charlie_id: Optional[str] = None
+        self.next_player_charlie_locked: bool = False
+        self.next_player_charlie_name: Optional[str] = None
         self.current_player_couple: Optional[Queue] = None
         self.player_in_charlie: bool = False
 
@@ -103,9 +104,10 @@ class GameBackend:
                 'name': name
             })
             self.player_names[player_id] = name
-            if not self.next_charlie_player and not self.next_charlie_player_locked:
-                self.next_charlie_player = player_id
-                self.next_charlie_player_locked = True
+            if not self.next_player_charlie_id and not self.next_player_charlie_locked:
+                self.next_player_charlie_id = player_id
+                self.next_player_charlie_name = name
+                self.next_player_charlie_locked = True
 
     def record_couple_game(self, mid_time: float, total_time: float) -> None:
         """
@@ -142,7 +144,7 @@ class GameBackend:
             if self.couple_in_bravo and self.queue_singles:
                 self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             else:
                 self.update_next_player()
             # Record the duration
@@ -243,51 +245,51 @@ class GameBackend:
                 self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
                 assert self.next_player_alfa_bravo_id is not None
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             elif self.queue_singles:
                 self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
                 assert self.next_player_alfa_bravo_id is not None
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             else:
                 self.next_player_alfa_bravo_id = None
                 self.next_player_alfa_bravo_name = None
-                self.next_player_locked = False
+                self.next_player_alfa_bravo_locked = False
         elif self.current_player_alfa is None and self.current_player_bravo is not None:
             if self.queue_couples:
                 self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
                 assert self.next_player_alfa_bravo_id is not None
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             elif self.queue_singles:
                 self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
                 assert self.next_player_alfa_bravo_id is not None
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             else:
                 self.next_player_alfa_bravo_id = None
                 self.next_player_alfa_bravo_name = None
-                self.next_player_locked = False
+                self.next_player_alfa_bravo_locked = False
         else:
             if self.queue_couples and self.current_player_alfa and self.current_player_alfa["id"].startswith("BLU") and self.current_player_bravo is None:
                 self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
                 assert self.next_player_alfa_bravo_id is not None
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             elif self.queue_couples:
                 self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
                 assert self.next_player_alfa_bravo_id is not None
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             elif self.queue_singles:
                 self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
                 assert self.next_player_alfa_bravo_id is not None
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             else:
                 self.next_player_alfa_bravo_id = None
                 self.next_player_alfa_bravo_name = None
-                self.next_player_locked = False
+                self.next_player_alfa_bravo_locked = False
 
     def start_game(self, is_couple: bool) -> None:
         now = self.get_current_time()
@@ -304,11 +306,11 @@ class GameBackend:
                 if self.queue_singles:
                     self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
                     self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                    self.next_player_locked = True
+                    self.next_player_alfa_bravo_locked = True
                 else:
                     self.next_player_alfa_bravo_id = self.queue_couples[0]['id'] if self.queue_couples else None
                     self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id) if self.next_player_alfa_bravo_id else None
-                    self.next_player_locked = True if self.next_player_alfa_bravo_id else False
+                    self.next_player_alfa_bravo_locked = True if self.next_player_alfa_bravo_id else False
             else:
                 raise ValueError("No couples in queue to start the game.")
         else:
@@ -320,11 +322,11 @@ class GameBackend:
                 if self.queue_couples:
                     self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
                     self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                    self.next_player_locked = True
+                    self.next_player_alfa_bravo_locked = True
                 else:
                     self.next_player_alfa_bravo_id = self.queue_singles[0]['id'] if self.queue_singles else None
                     self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id) if self.next_player_alfa_bravo_id else None
-                    self.next_player_locked = True if self.next_player_alfa_bravo_id else False
+                    self.next_player_alfa_bravo_locked = True if self.next_player_alfa_bravo_id else False
             else:
                 raise ValueError("No singles in queue to start the game.")
 
@@ -422,11 +424,11 @@ class GameBackend:
         # Calcola i tempi stimati di ingresso
         est = self.simulate_schedule()
         # Se non è già fissato un prossimo giocatore...
-        if not self.next_player_locked:
+        if not self.next_player_alfa_bravo_locked:
             # Caso speciale: se c'è una coppia in BRAVO e un singolo in ALFA, prioritizza le coppie
             if self.couple_in_bravo and self.single_in_alfa and self.queue_couples:
                 self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             else:
                 # Altrimenti, controlla il tempo stimato per ogni giocatore in coda
                 for queue_item in self.queue_couples + self.queue_singles:
@@ -435,7 +437,7 @@ class GameBackend:
                         minutes_to_entry = (estimated_time - now).total_seconds() / 60
                         if minutes_to_entry <= 2:
                             self.next_player_alfa_bravo_id = queue_item['id']
-                            self.next_player_locked = True
+                            self.next_player_alfa_bravo_locked = True
                             break
 
         # Costruzione della board: se l'elemento corrisponde a next_player_alfa_bravo_id, mostra "PROSSIMO INGRESSO"
@@ -460,7 +462,7 @@ class GameBackend:
 
         charlie_board: List[Tuple[int, str, Union[datetime.datetime, str]]] = []
         for idx, item in enumerate(self.queue_charlie):
-            if item['id'] == self.next_charlie_player:
+            if item['id'] == self.next_player_charlie_id:
                 charlie_board.append((idx + 1, item['id'], "PROSSIMO INGRESSO"))
             else:
                 players_ahead = idx
@@ -484,7 +486,7 @@ class GameBackend:
         return self.third_button_pressed
 
     def skip_player(self, player_id: str) -> None:
-        """Sposta un giocatore nella lista degli skippati"""
+        """Sposta un giocatore nella lista degli skippati (Alfa/Bravo)"""
         player = next((c for c in self.queue_couples if c['id'] == player_id), None)
         if player:
             self.queue_couples.remove(player)
@@ -493,11 +495,11 @@ class GameBackend:
             if self.queue_couples:
                 self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
                 self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             else:
                 self.next_player_alfa_bravo_id = None
                 self.next_player_alfa_bravo_name = None
-                self.next_player_locked = False
+                self.next_player_alfa_bravo_locked = False
         else:
             player = next((s for s in self.queue_singles if s['id'] == player_id), None)
             if player:
@@ -507,33 +509,27 @@ class GameBackend:
                 if self.queue_singles:
                     self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
                     self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-                    self.next_player_locked = True
+                    self.next_player_alfa_bravo_locked = True
                 else:
                     self.next_player_alfa_bravo_id = None
                     self.next_player_alfa_bravo_name = None
-                    self.next_player_locked = False
-            else:
-                player = next((p for p in self.queue_charlie if p['id'] == player_id), None)
-                if player:
-                    self.queue_charlie.remove(player)
-                    self.skipped_charlie.append(player)
-                    # Set the next player to the next Charlie in the queue
-                    if self.queue_charlie:
-                        self.next_charlie_player = self.queue_charlie[0]['id']
-                        self.next_charlie_player_locked = True
-                    else:
-                        self.next_charlie_player = None
-                        self.next_charlie_player_locked = False
+                    self.next_player_alfa_bravo_locked = False
 
-        # Ensure the next player is of the same type
-        if "GIALLO" in player_id and self.queue_couples:
-            self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
-            self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-            self.next_player_locked = True
-        elif "BLU" in player_id and self.queue_singles:
-            self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
-            self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
-            self.next_player_locked = True
+    def skip_charlie_player(self, player_id: str) -> None:
+        """Sposta un giocatore nella lista degli skippati (Charlie)"""
+        player = next((p for p in self.queue_charlie if p['id'] == player_id), None)
+        if player:
+            self.queue_charlie.remove(player)
+            self.skipped_charlie.append(player)
+            # Set the next player to the next Charlie in the queue
+            if self.queue_charlie:
+                self.next_player_charlie_id = self.queue_charlie[0]['id']
+                self.next_player_charlie_name = self.get_player_name(self.next_player_charlie_id)
+                self.next_player_charlie_locked = True
+            else:
+                self.next_player_charlie_id = None
+                self.next_player_charlie_name = None
+                self.next_player_charlie_locked = False
 
     def restore_skipped(self, player_id: str) -> None:
         """Ripristina un giocatore skippato in coda come priorità"""
@@ -559,38 +555,41 @@ class GameBackend:
             self.skipped_couples.remove(player)
             self.queue_couples.insert(0, player)
             self.next_player_alfa_bravo_id = player_id
-            self.next_player_locked = True
+            self.next_player_alfa_bravo_locked = True
         else:
             player = next((s for s in self.skipped_singles if s['id'] == player_id), None)
             if player:
                 self.skipped_singles.remove(player)
                 self.queue_singles.insert(0, player)
                 self.next_player_alfa_bravo_id = player_id
-                self.next_player_locked = True
+                self.next_player_alfa_bravo_locked = True
             else:
                 player = next((p for p in self.skipped_charlie if p['id'] == player_id), None)
                 if player:
                     self.skipped_charlie.remove(player)
                     self.queue_charlie.insert(0, player)
-                    self.next_charlie_player = player_id
-                    self.next_charlie_player_locked = True
+                    self.next_player_charlie_id = player_id
+                    self.next_player_charlie_name = self.get_player_name(player_id)
+                    self.next_player_charlie_locked = True
 
     def start_charlie_game(self) -> None:
         """Avvia un gioco sulla pista Charlie"""
-        if self.next_charlie_player:
-            self.current_player_charlie = {'id': self.next_charlie_player, 'arrival': self.get_current_time()}
+        if self.next_player_charlie_id:
+            self.current_player_charlie = {'id': self.next_player_charlie_id, 'arrival': self.get_current_time()}
             self.CHARLIE_next_available = self.get_current_time() + datetime.timedelta(minutes=self.T_charlie)
             self.player_start_times[self.current_player_charlie['id']] = self.get_current_time()
             self.player_in_charlie = True
             # Rimuovi il giocatore dalla coda
-            self.queue_charlie = [p for p in self.queue_charlie if p['id'] != self.next_charlie_player]
+            self.queue_charlie = [p for p in self.queue_charlie if p['id'] != self.next_player_charlie_id]
             # Imposta il prossimo giocatore
             if self.queue_charlie:
-                self.next_charlie_player = self.queue_charlie[0]['id']
-                self.next_charlie_player_locked = True
+                self.next_player_charlie_id = self.queue_charlie[0]['id']
+                self.next_player_charlie_name = self.get_player_name(self.next_player_charlie_id)
+                self.next_player_charlie_locked = True
             else:
-                self.next_charlie_player = None
-                self.next_charlie_player_locked = False
+                self.next_player_charlie_id = None
+                self.next_player_charlie_name = None
+                self.next_player_charlie_locked = False
 
     def get_durations(self) -> Dict[str, str]:
         """Restituisce le durate dei giocatori attuali in pista formattate in minuti:secondi"""

@@ -18,113 +18,158 @@ function updateDashboard() {
     .then((data) => {
       // Aggiorna la coda coppie
       const couplesBoard = document.getElementById("couples-board");
-      couplesBoard.innerHTML = "";
-      data.couples.forEach((player) => {
-        const timeDisplay =
-          player.estimated_time === "PROSSIMO INGRESSO"
-            ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player.estimated_time);
-        const li = document.createElement("li");
-        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
-        couplesBoard.appendChild(li);
-      });
+      if (couplesBoard) {
+        couplesBoard.innerHTML = "";
+        data.couples.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          couplesBoard.appendChild(li);
+        });
+      }
 
       // Aggiorna la coda singoli
       const singlesBoard = document.getElementById("singles-board");
-      singlesBoard.innerHTML = "";
-      data.singles.forEach((player) => {
-        const timeDisplay =
-          player.estimated_time === "PROSSIMO INGRESSO"
-            ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player.estimated_time);
-        const li = document.createElement("li");
-        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
-        singlesBoard.appendChild(li);
-      });
+      if (singlesBoard) {
+        singlesBoard.innerHTML = "";
+        data.singles.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          singlesBoard.appendChild(li);
+        });
+      }
 
       // se non ci sono singoli ne coppie in coda nella board, resettami il prossimo giocatore
       if (data.couples.length === 0 && data.singles.length === 0) {
-        document.getElementById("next-player-text").textContent = "Nessun Giocatore in coda";
+        const nextPlayerAlfaBravoText = document.getElementById("next-player-alfa-bravo-text");
+        if (nextPlayerAlfaBravoText) {
+          nextPlayerAlfaBravoText.textContent = "Nessun Giocatore in coda";
+        }
       }
 
       // Aggiorna la coda Charlie
       const charlieBoard = document.getElementById("charlie-board");
-      charlieBoard.innerHTML = "";
-      data.charlie.forEach((player) => {
-        const timeDisplay =
-          player.estimated_time === "PROSSIMO INGRESSO"
-            ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player.estimated_time);
-        const li = document.createElement("li");
-        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
-        charlieBoard.appendChild(li);
-      });
+      if (charlieBoard) {
+        charlieBoard.innerHTML = "";
+        data.charlie.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          charlieBoard.appendChild(li);
+        });
+      }
 
-      if (data.next_player_alfa_bravo_id && data.next_player_alfa_bravo_name) {
-        document.getElementById("next-player-text").textContent =
+      const nextPlayerAlfaBravoText = document.getElementById("next-player-alfa-bravo-text");
+      if (nextPlayerAlfaBravoText && data.next_player_alfa_bravo_id && data.next_player_alfa_bravo_name) {
+        nextPlayerAlfaBravoText.textContent =
           `${data.next_player_alfa_bravo_id}` || "nessun giocatore in coda";
       }
 
-      document.getElementById("next-charlie-player").textContent =
-        data.next_charlie_player || "-";
+      const nextCharlieText = document.getElementById("next-charlie-text");
+      if (nextCharlieText && data.next_player_charlie_id && data.next_player_charlie_name) {
+        nextCharlieText.textContent =
+          `${data.next_player_charlie_id}` || "nessun giocatore in coda";
+      }
+
+      const nextCharliePlayer = document.getElementById("next-charlie-player");
+      if (nextCharliePlayer) {
+        nextCharliePlayer.textContent = data.next_charlie_player || "-";
+      }
 
       // Aggiorna il giocatore corrente in Alfa
-      if (data.current_player_alfa) {
-        document.getElementById("current-player-alfa").textContent = data.current_player_alfa["id"];
-        document.getElementById("alfa-duration").textContent = data.alfa_duration;
-      } else {
-        document.getElementById("current-player-alfa").textContent = "Nessun giocatore";
-        document.getElementById("alfa-duration").textContent = "-";
+      const currentPlayerAlfa = document.getElementById("current-player-alfa");
+      const alfaDuration = document.getElementById("alfa-duration");
+      if (currentPlayerAlfa && alfaDuration) {
+        if (data.current_player_alfa) {
+          currentPlayerAlfa.textContent = data.current_player_alfa["id"];
+          alfaDuration.textContent = data.alfa_duration;
+        } else {
+          currentPlayerAlfa.textContent = "Nessun giocatore";
+          alfaDuration.textContent = "-";
+        }
       }
 
       // Aggiorna il giocatore corrente in Bravo
-      if (data.current_player_bravo) {
-        document.getElementById("current-player-bravo").textContent = data.current_player_bravo.id;
-        document.getElementById("bravo-duration").textContent = data.bravo_duration;
-      } else {
-        document.getElementById("current-player-bravo").textContent = "Nessun giocatore";
-        document.getElementById("bravo-duration").textContent = "-";
+      const currentPlayerBravo = document.getElementById("current-player-bravo");
+      const bravoDuration = document.getElementById("bravo-duration");
+      if (currentPlayerBravo && bravoDuration) {
+        if (data.current_player_bravo) {
+          currentPlayerBravo.textContent = data.current_player_bravo.id;
+          bravoDuration.textContent = data.bravo_duration;
+        } else {
+          currentPlayerBravo.textContent = "Nessun giocatore";
+          bravoDuration.textContent = "-";
+        }
       }
 
       // Aggiorna il giocatore corrente in Charlie
-      if (data.current_player_charlie) {
-        document.getElementById("current-player-charlie").textContent = data.current_player_charlie.id;
-        document.getElementById("charlie-duration").textContent = data.charlie_duration;
-      } else {
-        document.getElementById("current-player-charlie").textContent = "Nessun giocatore";
-        document.getElementById("charlie-duration").textContent = "-";
+      const currentPlayerCharlie = document.getElementById("current-player-charlie");
+      const charlieDuration = document.getElementById("charlie-duration");
+      if (currentPlayerCharlie && charlieDuration) {
+        if (data.current_player_charlie) {
+          currentPlayerCharlie.textContent = data.current_player_charlie.id;
+          charlieDuration.textContent = data.charlie_duration;
+        } else {
+          currentPlayerCharlie.textContent = "Nessun giocatore";
+          charlieDuration.textContent = "-";
+        }
       }
 
       // Aggiorna lo stato e il colore della card ALFA
-      $("#alfa-state").text(data.alfa_status);
-      $("#alfa-remaining").text(data.alfa_remaining);
-      $("#alfa-status")
-        .removeClass("occupied free")
-        .addClass(data.alfa_status === "Occupata" ? "occupied" : "free");
+      const alfaState = $("#alfa-state");
+      const alfaRemaining = $("#alfa-remaining");
+      const alfaStatus = $("#alfa-status");
+      if (alfaState && alfaRemaining && alfaStatus) {
+        alfaState.text(data.alfa_status);
+        alfaRemaining.text(data.alfa_remaining);
+        alfaStatus
+          .removeClass("occupied free")
+          .addClass(data.alfa_status === "Occupata" ? "occupied" : "free");
+      }
 
       // Aggiorna lo stato e il colore della card BRAVO
-      $("#bravo-state").text(data.bravo_status);
-      $("#bravo-remaining").text(data.bravo_remaining);
-      $("#bravo-status")
-        .removeClass("occupied free")
-        .addClass(data.bravo_status === "Occupata" ? "occupied" : "free");
+      const bravoState = $("#bravo-state");
+      const bravoRemaining = $("#bravo-remaining");
+      const bravoStatus = $("#bravo-status");
+      if (bravoState && bravoRemaining && bravoStatus) {
+        bravoState.text(data.bravo_status);
+        bravoRemaining.text(data.bravo_remaining);
+        bravoStatus
+          .removeClass("occupied free")
+          .addClass(data.bravo_status === "Occupata" ? "occupied" : "free");
+      }
 
       // Aggiorna lo stato e il colore della card CHARLIE
-      $("#charlie-state").text(data.charlie_status);
-      $("#charlie-remaining").text(data.charlie_remaining);
-      $("#charlie-status")
-        .removeClass("occupied free")
-        .addClass(data.charlie_status === "Occupata" ? "occupied" : "free");
+      const charlieState = $("#charlie-state");
+      const charlieRemaining = $("#charlie-remaining");
+      const charlieStatus = $("#charlie-status");
+      if (charlieState && charlieRemaining && charlieStatus) {
+        charlieState.text(data.charlie_status);
+        charlieRemaining.text(data.charlie_remaining);
+        charlieStatus
+          .removeClass("occupied free")
+          .addClass(data.charlie_status === "Occupata" ? "occupied" : "free");
+      }
     });
 
   // Aggiorna la visualizzazione degli skippati
   updateSkipped();
 }
 
-function skipNextPlayer() {
-  const nextPlayer = document.getElementById("next-player-text").textContent;
+function skipNextPlayerAlfaBravo() {
+  const nextPlayer = document.getElementById("next-player-alfa-bravo-text").textContent;
   if (nextPlayer && nextPlayer !== "-") {
-    fetch("/skip_next_player", {
+    fetch("/skip_next_player_alfa_bravo", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -148,18 +193,62 @@ function skipNextPlayer() {
           .then((data) => {
             // Prima controlla se ci sono coppie
             if (data.couples && data.couples.length > 0) {
-              document.getElementById("next-player-text").textContent =
+              document.getElementById("next-player-alfa-bravo-text").textContent =
                 data.couples[0][1];
             }
 
             // Se non ci sono coppie, controlla i singoli
             else if (data.singles && data.singles.length > 0) {
-              document.getElementById("next-player-text").textContent =
+              document.getElementById("next-player-alfa-bravo-text").textContent =
                 data.singles[0][1];
             }
             // Se non ci sono né coppie né singoli
             else {
-              document.getElementById("next-player-text").textContent = "-";
+              document.getElementById("next-player-alfa-bravo-text").textContent = "-";
+            }
+            updateDashboard();
+            updateSkipped();
+          })
+          .catch((error) => {
+            console.error("Errore durante la chiamata di simulate:", error);
+          });
+      })
+      .catch((error) => {
+        console.error("Errore durante la chiamata di skip:", error);
+      });
+  }
+}
+
+function skipNextPlayerCharlie() {
+  const nextPlayer = document.getElementById("next-charlie-text").textContent;
+  if (nextPlayer && nextPlayer !== "-") {
+    fetch("/skip_charlie_player", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: nextPlayer }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Errore nella chiamata di skip");
+        }
+        return response.json();
+      })
+      .then(() => {
+        fetch("/simulate")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Errore nella chiamata di simulate");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (data.charlie && data.charlie.length > 0) {
+              document.getElementById("next-charlie-text").textContent =
+                data.charlie[0][1];
+            } else {
+              document.getElementById("next-charlie-text").textContent = "-";
             }
             updateDashboard();
             updateSkipped();
@@ -217,6 +306,7 @@ function restoreSkipped(playerId) {
 }
 
 function skipCharliePlayer() {
+  const nextPlayer = document.getElementById("next-charlie-text").textContent;
   fetch("/skip_charlie_player", {
     method: "POST",
     headers: {
@@ -226,8 +316,6 @@ function skipCharliePlayer() {
     .then((response) => response.json())
     .then(() => updateDashboard());
 }
-
-
 
 // Aggiorna la visualizzazione degli skippati
 function updateSkipped() {
@@ -301,102 +389,163 @@ function updateBoards() {
     .then((data) => {
       // Aggiorna la coda coppie
       const couplesBoard = document.getElementById("couples-board");
-      couplesBoard.innerHTML = "";
-      data.couples.forEach((player) => {
-        const timeDisplay =
-          player.estimated_time === "PROSSIMO INGRESSO"
-            ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player.estimated_time);
-        const li = document.createElement("li");
-        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
-        couplesBoard.appendChild(li);
-      });
+      if (couplesBoard) {
+        couplesBoard.innerHTML = "";
+        data.couples.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          couplesBoard.appendChild(li);
+        });
+      }
 
       // Aggiorna la coda singoli
       const singlesBoard = document.getElementById("singles-board");
-      singlesBoard.innerHTML = "";
-      data.singles.forEach((player) => {
-        const timeDisplay =
-          player.estimated_time === "PROSSIMO INGRESSO"
-            ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player.estimated_time);
-        const li = document.createElement("li");
-        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
-        singlesBoard.appendChild(li);
-      });
+      if (singlesBoard) {
+        singlesBoard.innerHTML = "";
+        data.singles.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          singlesBoard.appendChild(li);
+        });
+      }
 
       // se non ci sono singoli ne coppie in coda nella board, resettami il prossimo giocatore
       if (data.couples.length === 0 && data.singles.length === 0) {
-        document.getElementById("next-player-text").textContent = "Nessun Giocatore in coda";
+        const nextPlayerAlfaBravoText = document.getElementById("next-player-alfa-bravo-text");
+        if (nextPlayerAlfaBravoText) {
+          nextPlayerAlfaBravoText.textContent = "Nessun Giocatore in coda";
+        }
       }
 
       // Aggiorna la coda Charlie
       const charlieBoard = document.getElementById("charlie-board");
-      charlieBoard.innerHTML = "";
-      data.charlie.forEach((player) => {
-        const timeDisplay =
-          player.estimated_time === "PROSSIMO INGRESSO"
-            ? "PROSSIMO INGRESSO"
-            : formatTimeRome(player.estimated_time);
-        const li = document.createElement("li");
-        li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
-        charlieBoard.appendChild(li);
-      });
+      if (charlieBoard) {
+        charlieBoard.innerHTML = "";
+        data.charlie.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          charlieBoard.appendChild(li);
+        });
+      }
 
-      if (data.next_player_alfa_bravo_id && data.next_player_alfa_bravo_name) {
-        document.getElementById("next-player-text").textContent =
+      const nextPlayerAlfaBravoText = document.getElementById("next-player-alfa-bravo-text");
+      if (nextPlayerAlfaBravoText && data.next_player_alfa_bravo_id && data.next_player_alfa_bravo_name) {
+        nextPlayerAlfaBravoText.textContent =
           `${data.next_player_alfa_bravo_id}` || "nessun giocatore in coda";
       }
 
-      document.getElementById("next-charlie-player").textContent =
-        data.next_charlie_player || "-";
+      const nextCharlieText = document.getElementById("next-charlie-text");
+      if (nextCharlieText && data.next_player_charlie_id && data.next_player_charlie_name) {
+        nextCharlieText.textContent =
+          `${data.next_player_charlie_id}` || "nessun giocatore in coda";
+      }
 
       // Aggiorna il giocatore corrente in Alfa
-      if (data.current_player_alfa) {
-        document.getElementById("current-player-alfa").textContent = data.current_player_alfa["id"];
-        document.getElementById("alfa-duration").textContent = data.alfa_duration;
-      } else {
-        document.getElementById("current-player-alfa").textContent = "Nessun giocatore";
-        document.getElementById("alfa-duration").textContent = "-";
+      const currentPlayerAlfa = document.getElementById("current-player-alfa");
+      const alfaDuration = document.getElementById("alfa-duration");
+      if (currentPlayerAlfa && alfaDuration) {
+        if (data.current_player_alfa) {
+          currentPlayerAlfa.textContent = data.current_player_alfa["id"];
+          alfaDuration.textContent = data.alfa_duration;
+        } else {
+          currentPlayerAlfa.textContent = "Nessun giocatore";
+          alfaDuration.textContent = "-";
+        }
       }
 
       // Aggiorna il giocatore corrente in Bravo
-      if (data.current_player_bravo) {
-        document.getElementById("current-player-bravo").textContent = data.current_player_bravo.id;
-        document.getElementById("bravo-duration").textContent = data.bravo_duration;
-      } else {
-        document.getElementById("current-player-bravo").textContent = "Nessun giocatore";
-        document.getElementById("bravo-duration").textContent = "-";
+      const currentPlayerBravo = document.getElementById("current-player-bravo");
+      const bravoDuration = document.getElementById("bravo-duration");
+      if (currentPlayerBravo && bravoDuration) {
+        if (data.current_player_bravo) {
+          currentPlayerBravo.textContent = data.current_player_bravo.id;
+          bravoDuration.textContent = data.bravo_duration;
+        } else {
+          currentPlayerBravo.textContent = "Nessun giocatore";
+          bravoDuration.textContent = "-";
+        }
       }
 
       // Aggiorna il giocatore corrente in Charlie
-      if (data.current_player_charlie) {
-        document.getElementById("current-player-charlie").textContent = data.current_player_charlie.id;
-        document.getElementById("charlie-duration").textContent = data.charlie_duration;
-      } else {
-        document.getElementById("current-player-charlie").textContent = "Nessun giocatore";
-        document.getElementById("charlie-duration").textContent = "-";
+      const currentPlayerCharlie = document.getElementById("current-player-charlie");
+      const charlieDuration = document.getElementById("charlie-duration");
+      if (currentPlayerCharlie && charlieDuration) {
+        if (data.current_player_charlie) {
+          currentPlayerCharlie.textContent = data.current_player_charlie.id;
+          charlieDuration.textContent = data.charlie_duration;
+        } else {
+          currentPlayerCharlie.textContent = "Nessun giocatore";
+          charlieDuration.textContent = "-";
+        }
       }
 
       // Aggiorna lo stato e il colore della card ALFA
-      $("#alfa-state").text(data.alfa_status);
-      $("#alfa-remaining").text(data.alfa_remaining);
-      $("#alfa-status")
-        .removeClass("occupied free")
-        .addClass(data.alfa_status === "Occupata" ? "occupied" : "free");
+      const alfaState = $("#alfa-state");
+      const alfaRemaining = $("#alfa-remaining");
+      const alfaStatus = $("#alfa-status");
+      if (alfaState && alfaRemaining && alfaStatus) {
+        alfaState.text(data.alfa_status);
+        alfaRemaining.text(data.alfa_remaining);
+        alfaStatus
+          .removeClass("occupied free")
+          .addClass(data.alfa_status === "Occupata" ? "occupied" : "free");
+      }
 
       // Aggiorna lo stato e il colore della card BRAVO
-      $("#bravo-state").text(data.bravo_status);
-      $("#bravo-remaining").text(data.bravo_remaining);
-      $("#bravo-status")
-        .removeClass("occupied free")
-        .addClass(data.bravo_status === "Occupata" ? "occupied" : "free");
+      const bravoState = $("#bravo-state");
+      const bravoRemaining = $("#bravo-remaining");
+      const bravoStatus = $("#bravo-status");
+      if (bravoState && bravoRemaining && bravoStatus) {
+        bravoState.text(data.bravo_status);
+        bravoRemaining.text(data.bravo_remaining);
+        bravoStatus
+          .removeClass("occupied free")
+          .addClass(data.bravo_status === "Occupata" ? "occupied" : "free");
+      }
 
       // Aggiorna lo stato e il colore della card CHARLIE
-      $("#charlie-state").text(data.charlie_status);
-      $("#charlie-remaining").text(data.charlie_remaining);
-      $("#charlie-status")
-        .removeClass("occupied free")
-        .addClass(data.charlie_status === "Occupata" ? "occupied" : "free");
+      const charlieState = $("#charlie-state");
+      const charlieRemaining = $("#charlie-remaining");
+      const charlieStatus = $("#charlie-status");
+      if (charlieState && charlieRemaining && charlieStatus) {
+        charlieState.text(data.charlie_status);
+        charlieRemaining.text(data.charlie_remaining);
+        charlieStatus
+          .removeClass("occupied free")
+          .addClass(data.charlie_status === "Occupata" ? "occupied" : "free");
+      }
+    });
+}
+
+function addCharliePlayer() {
+  const name = document.getElementById("playerName").value;
+  const id = document.getElementById("playerId").value;
+  fetch("/add_charlie_player", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name: name, id: id }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert("Giocatore aggiunto con successo!");
+        updateDashboard(); // Update the dashboard to reflect the new Charlie player
+      } else {
+        alert("Errore nell'aggiunta del giocatore.");
+      }
     });
 }
