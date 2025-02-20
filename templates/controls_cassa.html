@@ -2,10 +2,37 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/controls_cassa.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
 {% endblock %}
 
 {% block content %}
 <h1>Cassa</h1>
+
+<div class="status-container">
+    <div class="status-box" id="alfa-status">
+        <h3>Pista ALFA</h3>
+        <p>Stato: <span id="alfa-state">-</span></p>
+        <p>Tempo rimanente: <span id="alfa-remaining">-</span></p>
+        <p>Giocatore attuale: <span id="current-player-alfa">-</span></p>
+        <p>Durata: <span id="alfa-duration">-</span></p>
+    </div>
+
+    <div class="status-box" id="bravo-status">
+        <h3>Pista BRAVO</h3>
+        <p>Stato: <span id="bravo-state">-</span></p>
+        <p>Tempo rimanente: <span id="bravo-remaining">-</span></p>
+        <p>Giocatore attuale: <span id="current-player-bravo">-</span></p>
+        <p>Durata: <span id="bravo-duration">-</span></p>
+    </div>
+
+    <div class="status-box" id="charlie-status">
+        <h3>Pista CHARLIE</h3>
+        <p>Stato: <span id="charlie-state">-</span></p>
+        <p>Tempo rimanente: <span id="charlie-remaining">-</span></p>
+        <p>Giocatore attuale: <span id="current-player-charlie">-</span></p>
+        <p>Durata: <span id="charlie-duration">-</span></p>
+    </div>
+</div>
 
 <div class="game-info">
     <div class="current-player">
@@ -16,12 +43,64 @@
     </div>
 </div>
 
-<div class="control-panel">
-    <div class="button-group">
-        <button id="add-couple-btn" class="btn btn-add btn-yellow">Aggiungi Coppia (GIALLO) 1</button>
-        <button id="add-single-btn" class="btn btn-add btn-blue">Aggiungi Singolo (BLU) 1</button>
-        <button id="add-charlie-btn" class="btn btn-add btn-green">Aggiungi Charlie (VERDE) 1</button>
+<div class="button-group">
+    <button id="add-couple-btn" class="btn btn-add btn-yellow">Aggiungi Coppia (GIALLO) 1</button>
+    <button id="add-single-btn" class="btn btn-add btn-blue">Aggiungi Singolo (BLU) 1</button>
+    <button id="add-charlie-btn" class="btn btn-add btn-green">Aggiungi Charlie (VERDE) 1</button>
+</div>
+
+<div class="next-players-container">
+    <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore ALFA/BRAVO:</div>
+        <div class="next-player" id="next-player">
+            <span id="next-player-alfa-bravo-text">Nessun Giocatore In Coda</span>
+        </div>
+        <img src="/static/icons/Vector.svg" class="player-icon" alt="Player Icon" />
+        <button class="skip-button" onclick="skipNextPlayerAlfaBravo()">
+            SKIP <span class="skip-icon">>></span>
+        </button>
     </div>
+
+    <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore CHARLIE:</div>
+        <div class="next-player-id" id="next-charlie-text">
+            Nessun Giocatore In Coda
+        </div>
+        <button class="skip-button" onclick="skipNextPlayerCharlie()">
+            SKIP <span class="skip-icon">>></span>
+        </button>
+    </div>
+</div>
+
+<div class="boards-container">
+    <div class="board">
+        <h2>Coda Coppie</h2>
+        <ul id="couples-board"></ul>
+    </div>
+
+    <div class="board">
+        <h2>Coda Singoli</h2>
+        <ul id="singles-board"></ul>
+    </div>
+
+    <div class="board">
+        <h2>Coda CHARLIE</h2>
+        <ul id="charlie-board"></ul>
+    </div>
+</div>
+
+<div class="skipped-container">
+    <div class="skipped-title">Giocatori Skippati</div>
+    <div class="skipped-buttons">
+        <div id="skipped-couples-buttons"></div>
+        <div id="skipped-singles-buttons"></div>
+        <div id="skipped-charlie-buttons"></div>
+    </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<div class="control-panel">
     <form id="queueForm">
         <label for="playerType">Tipo di giocatore:</label>
         <select id="playerType" name="playerType" class="input-field">
@@ -42,4 +121,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/controls_cassa.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}
