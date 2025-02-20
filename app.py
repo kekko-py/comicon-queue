@@ -265,10 +265,10 @@ def button_press():
 
 @app.route('/skip_next_player', methods=['POST'])
 def skip_next_player():
-    if backend.next_player_alfa_bravo_id:
-        print(f"Current player: {backend.next_player_alfa_bravo_id}")
-        backend.skip_player(backend.next_player_alfa_bravo_id)
-        is_couple = backend.next_player_alfa_bravo_id.startswith("GIALLO")
+    player_id = request.json.get('id')
+    if player_id:
+        backend.skip_player(player_id)
+        is_couple = player_id.startswith("GIALLO")
         
         # Set the next player based on the type and availability in the queue
         if is_couple and backend.queue_couples:
