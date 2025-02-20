@@ -32,37 +32,9 @@
         Stato: <span id="status">Inattivo</span>
     </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
-<script>
-    document.getElementById('queueForm').addEventListener('submit', function (event) {
-        event.preventDefault();
-        const playerType = document.getElementById('playerType').value;
-        const playerId = document.getElementById('playerId').value;
-        let playerName = '';
-
-        if (playerType === 'couple') {
-            playerName = 'GIALLO';
-        } else if (playerType === 'single') {
-            playerName = 'BLU';
-        }
-
-        fetch(`/add_${playerType}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: playerId, name: playerName })
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Giocatore aggiunto con successo!');
-                } else {
-                    alert('Errore nell\'aggiunta del giocatore.');
-                }
-            });
-    });
-</script>
+<script src="{{ url_for('static', filename='js/controls_cassa.js') }}"></script>
 {% endblock %}

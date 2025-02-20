@@ -3,37 +3,37 @@ let startTime;
 let isGameActive = false;
 
 function updateNextPlayer() {
-    if ($('#current-player').text() !== '-' && !$('#next-player-btn').prop('disabled')) {
-        return;
-    }
-
     fetch('/simulate')
         .then(response => response.json())
         .then(data => {
             if (data.charlie && data.charlie.length > 0) {
-                const playerId = data.charlie[0][1];  // Ora sarà nel formato VERDE-XX
-                $('#current-player').text(playerId);
+                const nextPlayer = data.charlie[0];  // Ora sarà un oggetto con id e name
+                $('#next-player').text(`${nextPlayer.name} - ${nextPlayer.id}`);
                 $('#next-player-btn').prop('disabled', false);
+                console.log(`Next player to start: ${nextPlayer.name} - ${nextPlayer.id}`);  // Log del prossimo giocatore
             } else {
-                $('#current-player').text('-');
+                $('#next-player').text('-');
                 $('#next-player-btn').prop('disabled', true);
             }
+            if (data.current_player_charlie) {
+                $('#current-player').text(`${data.current_player_charlie['name']} - ${data.current_player_charlie['id']}`);
+            } else {
+                $('#current-player').text('-');
+            }
+            updateTrackStatus(data);
         });
 }
 
-function updateAvailability() {
-    $.get('/get_status', function(data) {
-        const canStart = data.charlie_status === 'Libera';
-        $('#start-btn').prop('disabled', !canStart);
-        $('#status').text(data.charlie_status + ' - ' + data.charlie_remaining);
-        
-        if (!canStart) {
-            $('#start-btn').attr('title', 'Attendere che la pista CHARLIE sia libera');
-        } else {
-            $('#start-btn').attr('title', '');
-        }
-        updateNextPlayer();
-    });
+function updateTrackStatus(data) {
+    const canStart = data.charlie_status === 'Libera';
+    $('#start-btn').prop('disabled', !canStart);
+    $('#status').text(data.charlie_status + ' - ' + data.charlie_remaining);
+
+    if (!canStart) {
+        $('#start-btn').attr('title', 'Attendere che la pista CHARLIE sia libera');
+    } else {
+        $('#start-btn').attr('title', '');
+    }
 }
 
 function updateTimer() {
@@ -50,7 +50,7 @@ function activateNextPlayer() {
     $('#stop-btn').prop('disabled', false);
     $('#timer').text('00:00');
     $('#current-player').text('-');
-    updateAvailability();
+    updateNextPlayer(); // Verifica disponibilità piste
 }
 
 function pressButton(button) {
@@ -58,13 +58,13 @@ function pressButton(button) {
         url: '/button_press',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify({button: button}),
-        success: function(response) {
+        data: JSON.stringify({ button: button }),
+        success: function (response) {
             if (!response.success) {
                 alert(response.error);
                 return;
             }
-            
+
             if (button === 'charlie_start') {
                 startTime = new Date();
                 isGameActive = true;
@@ -72,21 +72,17 @@ function pressButton(button) {
                 $('#next-player-btn').prop('disabled', true);
                 $('#start-btn').prop('disabled', true);
                 $('#stop-btn').prop('disabled', false);
-            } else if (button === 'charlie_stop') {
+                $('#current-player').text(`${response.current_player_charlie['name']} - ${response.current_player_charlie['id']}`); // Aggiorna il giocatore corrente
+            } else if (button === 'charlie_stop' && isGameActive) {
                 isGameActive = false;
                 clearInterval(timerInterval);
                 $('#next-player-btn').prop('disabled', false);
                 $('#start-btn, #stop-btn').prop('disabled', true);
+                $('#current-player').text('-'); // Resetta il giocatore corrente
+                updateNextPlayer();
+                updateDashboard(); // Aggiorna la dashboard per riflettere lo stato libero della pista Charlie
             }
-            
-            // updateAvailability();
         }
-    });
-}
-
-function updateStatus() {
-    $.get('/get_status', function(data) {
-        $('#status').text(data.charlie_status + ' - ' + data.charlie_remaining);
     });
 }
 
@@ -100,30 +96,19 @@ function skipPlayer() {
             },
             body: JSON.stringify({ id: currentPlayer })
         })
-        .then(response => response.json())
-        .then(() => {
-            // Dopo lo skip, aggiorna immediatamente per mostrare il prossimo giocatore dello stesso tipo
-            fetch('/simulate')
-                .then(response => response.json())
-                .then(data => {
-                    // Cerca il prossimo giocatore di tipo charlie (verde)
-                    if (data.charlie && data.charlie.length > 0) {
-                        $('#current-player').text(data.charlie[0][1]);
-                        $('#next-player-btn').prop('disabled', false);
-                    } //else {
-                    //     $('#current-player').text('-');
-                    //     $('#next-player-btn').prop('disabled', true);
-                    // }
-                });
-        });
+            .then(response => response.json())
+            .then(() => {
+                // Dopo lo skip, aggiorna immediatamente per mostrare il prossimo giocatore dello stesso tipo
+                updateNextPlayer();
+            });
     }
 }
 
-// Aggiorna lo stato ogni secondo
-setInterval(updateStatus, 1000);
-//setInterval(updateAvailability, 1000);
+// timer per aggiornare la disponibilità delle piste e prossimo giocatore
+setInterval(() => {
+    updateNextPlayer();
+}, 1000);
 
-$(document).ready(function() {
-    updateStatus();
-    updateAvailability();
+$(document).ready(function () {
+    updateNextPlayer();
 });

@@ -60,9 +60,9 @@ function updateDashboard() {
         charlieBoard.appendChild(li);
       });
 
-      if (data.next_player_id && data.next_player_name) {
+      if (data.next_player_alfa_bravo_id && data.next_player_alfa_bravo_name) {
         document.getElementById("next-player-text").textContent =
-          `${data.next_player_id}` || "nessun giocatore in coda";
+          `${data.next_player_alfa_bravo_id}` || "nessun giocatore in coda";
       }
 
       document.getElementById("next-charlie-player").textContent =
@@ -89,8 +89,10 @@ function updateDashboard() {
       // Aggiorna il giocatore corrente in Charlie
       if (data.current_player_charlie) {
         document.getElementById("current-player-charlie").textContent = data.current_player_charlie.id;
+        document.getElementById("charlie-duration").textContent = data.charlie_duration;
       } else {
         document.getElementById("current-player-charlie").textContent = "Nessun giocatore";
+        document.getElementById("charlie-duration").textContent = "-";
       }
 
       // Aggiorna lo stato e il colore della card ALFA
@@ -341,9 +343,9 @@ function updateBoards() {
         charlieBoard.appendChild(li);
       });
 
-      if (data.next_player_id && data.next_player_name) {
+      if (data.next_player_alfa_bravo_id && data.next_player_alfa_bravo_name) {
         document.getElementById("next-player-text").textContent =
-          `${data.next_player_id}` || "nessun giocatore in coda";
+          `${data.next_player_alfa_bravo_id}` || "nessun giocatore in coda";
       }
 
       document.getElementById("next-charlie-player").textContent =
@@ -370,8 +372,10 @@ function updateBoards() {
       // Aggiorna il giocatore corrente in Charlie
       if (data.current_player_charlie) {
         document.getElementById("current-player-charlie").textContent = data.current_player_charlie.id;
+        document.getElementById("charlie-duration").textContent = data.charlie_duration;
       } else {
         document.getElementById("current-player-charlie").textContent = "Nessun giocatore";
+        document.getElementById("charlie-duration").textContent = "-";
       }
 
       // Aggiorna lo stato e il colore della card ALFA

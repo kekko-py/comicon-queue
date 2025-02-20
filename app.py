@@ -89,6 +89,16 @@ def add_single():
     backend.add_single(single_id, name)
     return jsonify(success=True)
 
+@app.route('/add_charlie', methods=['POST'])
+def add_charlie():
+    id = request.json.get('id')
+    if not id:
+        return jsonify(success=False, error="id is required"), 400
+    name = "VERDE"
+    charlie_id = f"{name}-{int(id):02d}"
+    backend.add_charlie_player(charlie_id, name)
+    return jsonify(success=True)
+
 @app.route('/add_charlie_player', methods=['POST'])
 def add_charlie_player():
     name = request.json.get('name')
@@ -97,12 +107,12 @@ def add_charlie_player():
         return jsonify(success=False, error="Name and id are required"), 400
     player_id = f"{name.upper()}-{int(id):02d}"
     backend.add_charlie_player(player_id, name)
-    return jsonify(success=True)
+    return jsonify(success=True, player_id=player_id, name=name)
 
 @app.route('/simulate', methods=['GET'])
 def simulate():
     couples_board, singles_board, charlie_board = backend.get_waiting_board()
-    next_player_id = backend.next_player_id
+    next_player_alfa_bravo_id = backend.next_player_alfa_bravo_id
     next_charlie_player = backend.next_charlie_player
     
     # Formatta la coda Charlie nello stesso modo delle altre code
@@ -133,7 +143,7 @@ def simulate():
         })
     
     # Aggiungi il nome del giocatore per il prossimo giocatore
-    next_player_name = backend.get_player_name(next_player_id) if next_player_id else None
+    next_player_alfa_bravo_name = backend.get_player_name(next_player_alfa_bravo_id) if next_player_alfa_bravo_id else None
     current_player_alfa = backend.current_player_alfa
     current_player_bravo = backend.current_player_bravo
     current_player_charlie = backend.current_player_charlie
@@ -170,8 +180,8 @@ def simulate():
         couples=formatted_couples_board, 
         singles=formatted_singles_board,
         charlie=formatted_charlie_board,
-        next_player_id=next_player_id,
-        next_player_name=next_player_name,
+        next_player_alfa_bravo_id=next_player_alfa_bravo_id,
+        next_player_alfa_bravo_name=next_player_alfa_bravo_name,
         next_charlie_player=next_charlie_player,
         current_player_alfa=current_player_alfa,
         current_player_bravo=current_player_bravo,
@@ -179,12 +189,13 @@ def simulate():
         player_icon_url=url_for('static', filename='icons/Vector.svg'),
         alfa_status='Occupata' if backend.current_player_alfa else 'Libera',
         bravo_status='Occupata' if backend.current_player_bravo else 'Libera',
-        charlie_status='Occupata' if charlie_remaining > 0 else 'Libera',
+        charlie_status='Occupata' if backend.current_player_charlie else 'Libera',
         alfa_remaining=f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
         bravo_remaining=f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
         charlie_remaining=f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min",
         alfa_duration=durations.get('alfa', "N/D"),
-        bravo_duration=durations.get('bravo', "N/D")
+        bravo_duration=durations.get('bravo', "N/D"),
+        charlie_duration=durations.get('charlie', "N/D")
     )
 
 @app.route('/button_press', methods=['POST'])
@@ -237,39 +248,43 @@ def button_press():
         if not backend.queue_charlie:
             return jsonify(success=False, error="La coda di Charlie è vuota. Non è possibile avviare il gioco.")
         backend.start_charlie_game()
-        return jsonify(success=True)
+        return jsonify(success=True, current_player_charlie=backend.current_player_charlie)
     
     elif button == 'charlie_stop':
+        # Logica per fermare un gioco charlie
         if backend.current_player_charlie:
-            backend.record_charlie_game((now - backend.player_start_times[backend.current_player_charlie['id']]).total_seconds() / 60)
-            return jsonify(success=True)
-        else:
-            return jsonify(success=False, error="Nessun giocatore in pista CHARLIE.")
+            player_id = backend.current_player_charlie.get('id')
+            if player_id and player_id in backend.player_start_times:
+                backend.record_charlie_game((now - backend.player_start_times[player_id]).total_seconds() / 60)
+                backend.current_player_charlie = None  # Libera la pista Charlie
+                return jsonify(success=True)
+            else:
+                return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Charlie.")
     
     return jsonify(success=False, error="Pulsante non riconosciuto")
 
 @app.route('/skip_next_player', methods=['POST'])
 def skip_next_player():
-    if backend.next_player_id:
-        print(f"Current player: {backend.next_player_id}")
-        backend.skip_player(backend.next_player_id)
-        is_couple = backend.next_player_id.startswith("GIALLO")
+    if backend.next_player_alfa_bravo_id:
+        print(f"Current player: {backend.next_player_alfa_bravo_id}")
+        backend.skip_player(backend.next_player_alfa_bravo_id)
+        is_couple = backend.next_player_alfa_bravo_id.startswith("GIALLO")
         
         # Set the next player based on the type and availability in the queue
         if is_couple and backend.queue_couples:
-            backend.next_player_id = backend.queue_couples[0]['id']
-            backend.next_player_name = backend.get_player_name(backend.next_player_id)
+            backend.next_player_alfa_bravo_id = backend.queue_couples[0]['id']
+            backend.next_player_alfa_bravo_name = backend.get_player_name(backend.next_player_alfa_bravo_id)
             backend.next_player_locked = True
         elif not is_couple and backend.queue_singles:
-            backend.next_player_id = backend.queue_singles[0]['id']
-            backend.next_player_name = backend.get_player_name(backend.next_player_id)
+            backend.next_player_alfa_bravo_id = backend.queue_singles[0]['id']
+            backend.next_player_alfa_bravo_name = backend.get_player_name(backend.next_player_alfa_bravo_id)
             backend.next_player_locked = True
         else:
-            backend.next_player_id = None
-            backend.next_player_name = None
+            backend.next_player_alfa_bravo_id = None
+            backend.next_player_alfa_bravo_name = None
             backend.next_player_locked = False
 
-        print(f"Next player: {backend.next_player_id}")
+        print(f"Next player: {backend.next_player_alfa_bravo_id}")
     
     can_start_couple = not backend.single_in_alfa and not backend.couple_in_alfa and backend.queue_couples
     can_start_single = not backend.single_in_alfa and backend.queue_singles
@@ -280,8 +295,8 @@ def skip_next_player():
         can_start_couple=can_start_couple, 
         can_start_single=can_start_single, 
         can_start_charlie=can_start_charlie,
-        next_player_id=backend.next_player_id,
-        next_player_name=backend.next_player_name
+        next_player_alfa_bravo_id=backend.next_player_alfa_bravo_id,
+        next_player_alfa_bravo_name=backend.next_player_alfa_bravo_name
     )
 
 @app.route('/skip_charlie_player', methods=['POST'])
@@ -339,6 +354,17 @@ def start_game_route():
         return jsonify(success=False, error=str(e)), 400
     except Exception as e:
         return jsonify(success=False, error="An unexpected error occurred."), 500
+
+@app.route('/get_status', methods=['GET'])
+def get_status():
+    now = backend.get_current_time()
+    charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
+    charlie_status = 'Occupata' if charlie_remaining > 0 else 'Libera'
+    
+    return jsonify({
+        'charlie_status': charlie_status,
+        'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
+    })
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
