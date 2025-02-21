@@ -3,7 +3,7 @@ from main import GameBackend
 import datetime
 import os
 import pytz
-
+ 
 app = Flask(__name__)
 backend = GameBackend()
 
