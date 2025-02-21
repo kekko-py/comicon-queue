@@ -130,12 +130,20 @@
   margin-bottom: 10px;
 }
 
-.next-player-id {
+.next-player-charlie {
   font-size: 2.5em;
   font-weight: bold;
   color: #2e7d32;
   margin: 15px 0;
 }
+
+.next-player-alfa-bravo {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #2196f3;
+  margin: 15px 0;
+}
+
 
 .next-player-time {
   font-size: 1.3em;
