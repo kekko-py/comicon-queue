@@ -510,6 +510,10 @@ class GameBackend:
                     self.next_player_alfa_bravo_id = self.queue_singles[0]['id']
                     self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
                     self.next_player_alfa_bravo_locked = True
+                elif self.queue_couples:
+                    self.next_player_alfa_bravo_id = self.queue_couples[0]['id']
+                    self.next_player_alfa_bravo_name = self.get_player_name(self.next_player_alfa_bravo_id)
+                    self.next_player_alfa_bravo_locked = True
                 else:
                     self.next_player_alfa_bravo_id = None
                     self.next_player_alfa_bravo_name = None
