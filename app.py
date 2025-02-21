@@ -42,20 +42,9 @@ def controls_couple():
 def controls_single():
     return render_template('controls_single.html')
 
-
 @app.route('/controls/charlie')
 def controls_charlie():
     return render_template('controls_charlie.html')
-
-@app.route('/get_scores', methods=['GET'])
-def get_scores():
-    leaderboard = backend.get_leaderboard()
-    return jsonify(leaderboard)
-
-@app.route('/scoring')
-def scoring():
-    leaderboard = backend.get_leaderboard()
-    return render_template('scoring.html', leaderboard=leaderboard)
 
 @app.route('/keypad')
 def keypad():
@@ -174,6 +163,7 @@ def button_press():
         backend.player_in_charlie = False
     
     return jsonify(success=True)
+
 @app.route('/skip_next_player', methods=['POST'])
 def skip_next_player():
     if backend.next_player:
@@ -240,4 +230,4 @@ def check_availability():
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
-    app.run(host='0.0.0.0', port=2000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
