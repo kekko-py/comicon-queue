@@ -214,7 +214,7 @@ def button_press():
             return jsonify(success=False, error="Nessuna coppia in pista.")
     
     elif button == 'second_stop':
-        if backend.current_player_alfa:
+        if backend.current_player_alfa and backend.current_player_alfa.get('name') == "BLU":
             player_id = backend.current_player_alfa.get('id')
             if player_id and player_id in backend.player_start_times:
                 backend.record_single_game((now - backend.player_start_times[player_id]).total_seconds() / 60)
