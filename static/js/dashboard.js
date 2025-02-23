@@ -26,7 +26,7 @@ function updateDashboard() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
           couplesBoard.appendChild(li);
         });
       }
@@ -41,7 +41,7 @@ function updateDashboard() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
           singlesBoard.appendChild(li);
         });
       }
@@ -54,6 +54,15 @@ function updateDashboard() {
         }
       }
 
+      // se non ci sono charlie in coda nella board, resettami il prossimo giocatore
+      if (data.charlie.length === 0) {
+        const nextCharlieText = document.getElementById("next-charlie-text");
+        if (nextCharlieText) {
+          nextCharlieText.textContent = "Nessun Giocatore in coda";
+        }
+      }
+
+
       // Aggiorna la coda Charlie
       const charlieBoard = document.getElementById("charlie-board");
       if (charlieBoard) {
@@ -64,7 +73,7 @@ function updateDashboard() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
           charlieBoard.appendChild(li);
         });
       }
@@ -397,7 +406,7 @@ function updateBoards() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
           couplesBoard.appendChild(li);
         });
       }
@@ -412,7 +421,7 @@ function updateBoards() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
           singlesBoard.appendChild(li);
         });
       }
@@ -435,7 +444,7 @@ function updateBoards() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button onclick="deletePlayer('${player.id}')"><img src="/static/icons/trash.svg" alt="Delete"></button>`;
           charlieBoard.appendChild(li);
         });
       }
@@ -546,6 +555,24 @@ function addCharliePlayer() {
         updateDashboard(); // Update the dashboard to reflect the new Charlie player
       } else {
         alert("Errore nell'aggiunta del giocatore.");
+      }
+    });
+}
+
+function deletePlayer(playerId) {
+  fetch(`/delete_player`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id: playerId }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        updateDashboard();
+      } else {
+        alert("Errore nella cancellazione del giocatore.");
       }
     });
 }

@@ -325,3 +325,17 @@
   height: 24px;
   margin-right: 10px;
 }
+
+.trash-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  color: #e53935;
+  /* Red color that harmonizes with the existing colors */
+}
+
+.trash-button {
+  border-width: 0;
+  height: 24px;
+  background: none;
+}

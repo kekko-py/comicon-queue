@@ -340,6 +340,14 @@ def get_status():
         'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
     })
 
+@app.route('/delete_player', methods=['POST'])
+def delete_player():
+    player_id = request.json.get('id')
+    if player_id:
+        backend.delete_player(player_id)
+        return jsonify(success=True)
+    return jsonify(success=False, error="Player ID is required"), 400
+
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
     app.run(host='0.0.0.0', port=2000, debug=True)

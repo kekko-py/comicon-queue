@@ -15,11 +15,7 @@ function updateNextPlayer() {
                 $('#next-player').text('-');
                 $('#next-player-btn').prop('disabled', true);
             }
-            if (data.current_player_charlie) {
-                $('#current-player').text(`${data.current_player_charlie['name']} - ${data.current_player_charlie['id']}`);
-            } else {
-                $('#current-player').text('-');
-            }
+
             updateTrackStatus(data);
         });
 }
