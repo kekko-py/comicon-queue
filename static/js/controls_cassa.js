@@ -35,32 +35,41 @@ document.getElementById('queueForm').addEventListener('submit', function (event)
 });
 
 document.getElementById('add-couple-btn').addEventListener('click', function () {
-    if (coupleCounter <= 100) {
+    if (coupleCounter < 100) {
         addPlayer('couple', coupleCounter, 'GIALLO');
         coupleCounter++;
         this.textContent = `Aggiungi Coppia (GIALLO) ${coupleCounter}`;
     } else {
         showNotification('Limite massimo di 100 coppie raggiunto.', true);
+        addPlayer('couple', coupleCounter, 'GIALLO');
+        coupleCounter = 1; // Reset the counter
+        this.textContent = `Aggiungi Coppia (GIALLO) ${coupleCounter}`;
     }
 });
 
 document.getElementById('add-single-btn').addEventListener('click', function () {
-    if (singleCounter <= 100) {
+    if (singleCounter < 100) {
         addPlayer('single', singleCounter, 'BLU');
         singleCounter++;
         this.textContent = `Aggiungi Singolo (BLU) ${singleCounter}`;
     } else {
         showNotification('Limite massimo di 100 singoli raggiunto.', true);
+        addPlayer('single', singleCounter, 'BLU');
+        singleCounter = 1; // Reset the counter
+        this.textContent = `Aggiungi Singolo (BLU) ${singleCounter}`;
     }
 });
 
 document.getElementById('add-charlie-btn').addEventListener('click', function () {
-    if (charlieCounter <= 100) {
+    if (charlieCounter < 100) {
         addPlayer('charlie', charlieCounter, 'VERDE');
         charlieCounter++;
         this.textContent = `Aggiungi Charlie (VERDE) ${charlieCounter}`;
     } else {
         showNotification('Limite massimo di 100 Charlie raggiunto.', true);
+        addPlayer('charlie', charlieCounter, 'VERDE');
+        charlieCounter = 1; // Reset the counter
+        this.textContent = `Aggiungi Charlie (VERDE) ${charlieCounter}`;
     }
 });
 
