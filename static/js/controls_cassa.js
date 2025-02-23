@@ -101,6 +101,24 @@ function showNotification(message, isError = false) {
     }, 3000);
 }
 
+function deletePlayer(playerId) {
+    fetch(`/delete_player`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: playerId }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                updateDashboard();
+            } else {
+                showNotification("Errore nella cancellazione del giocatore.", true);
+            }
+        });
+}
+
 // Ensure the dashboard updates are also applied in the cassa page
 setInterval(() => {
     updateDashboard();
