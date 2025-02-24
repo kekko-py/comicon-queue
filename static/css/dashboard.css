@@ -10,7 +10,13 @@
   border-radius: 10px;
   padding: 20px;
   width: 250px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.status-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .status-box.occupied {
@@ -19,7 +25,7 @@
 }
 
 .status-box.free {
-  background: #354b37;
+  background: #e8f5e9;
   border-left: 5px solid #66bb6a;
 }
 
@@ -34,7 +40,13 @@
   border-radius: 10px;
   padding: 20px;
   width: 300px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.board:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .board h2 {
@@ -65,12 +77,11 @@
   background: #f8f9fa;
   border-radius: 5px;
   border-left: 4px solid #ffc107;
-  /* Colore per Charlie */
 }
 
 .card {
   margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -81,7 +92,6 @@
   padding: 1.25rem;
 }
 
-/* Stili specifici per le card Charlie */
 .border-warning {
   border-color: #ffc107 !important;
 }
@@ -113,7 +123,7 @@
   margin: 30px auto;
   max-width: 600px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   position: relative;
 }
@@ -144,7 +154,6 @@
   margin: 15px 0;
 }
 
-
 .next-player-time {
   font-size: 1.3em;
   color: #666;
@@ -171,7 +180,7 @@
 
 .skip-button:hover {
   background: #f5f5f5;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .skip-icon {
@@ -185,7 +194,7 @@
   background: white;
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .skipped-title {
@@ -224,13 +233,12 @@
   border-left: 4px solid #4caf50;
 }
 
-/* Aggiungi questi stili per i pulsanti skippati */
 .skipped-container {
   background: white;
   border-radius: 10px;
   padding: 20px;
   margin: 20px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .skipped-title {
@@ -274,7 +282,6 @@
   border-left: 3px solid #ffc107;
 }
 
-/* Stili per le card dei prossimi giocatori */
 .next-players-container {
   display: flex;
   justify-content: center;
@@ -289,7 +296,7 @@
   border-radius: 10px;
   padding: 20px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
@@ -304,19 +311,16 @@
 
 .skipped-button.couple {
   background-color: #ffd700;
-  /* Giallo */
   color: black;
 }
 
 .skipped-button.single {
   background-color: #2196f3;
-  /* Blu */
   color: white;
 }
 
 .skipped-button.charlie {
   background-color: #4caf50;
-  /* Verde */
   color: white;
 }
 
@@ -331,7 +335,6 @@
   height: 24px;
   margin-left: 10px;
   color: #e53935;
-  /* Red color that harmonizes with the existing colors */
 }
 
 .trash-button {
