@@ -60,7 +60,7 @@ def add_couple():
     name = request.json.get('name')
     if not id or not name:
         return jsonify(success=False, error="ID and name are required"), 400
-    couple_id = f"{name}-{int(id):02d}"
+    couple_id = f"{name.upper()} {int(id):03d}"
     backend.add_couple(couple_id, name)
     return jsonify(success=True)
 
@@ -70,7 +70,7 @@ def add_single():
     name = request.json.get('name')
     if not id or not name:
         return jsonify(success=False, error="ID and name are required"), 400
-    single_id = f"{name}-{int(id):02d}"
+    single_id = f"{name.upper()} {int(id):03d}"
     backend.add_single(single_id, name)
     return jsonify(success=True)
 
@@ -80,7 +80,7 @@ def add_charlie():
     name = request.json.get('name')
     if not id or not name:
         return jsonify(success=False, error="ID and name are required"), 400
-    charlie_id = f"{name}-{int(id):02d}"
+    charlie_id = f"{name.upper()} {int(id):03d}"
     backend.add_charlie_player(charlie_id, name)
     return jsonify(success=True)
 
@@ -90,7 +90,7 @@ def add_charlie_player():
     id = request.json.get('id')
     if not name or not id:
         return jsonify(success=False, error="Name and id are required"), 400
-    player_id = f"{name.upper()}-{int(id):02d}"
+    player_id = f"{name.upper()} {int(id):03d}"
     backend.add_charlie_player(player_id, name)
     
     if not backend.next_player_charlie_id and backend.queue_charlie:
