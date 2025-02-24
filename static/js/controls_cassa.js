@@ -1,6 +1,44 @@
 let coupleCounter = 1;
 let singleCounter = 1;
 let charlieCounter = 1;
+$(document).ready(function () {
+    fetchLastPlayerIds(); // Imposta i counter basati sugli ID attuali
+    updateDashboard();
+});
+
+
+function fetchLastPlayerIds() {
+    fetch('/simulate')
+        .then(response => response.json())
+        .then(data => {
+            let maxCouple = 0, maxSingle = 0, maxCharlie = 0;
+            console.log(data.couples[-1])
+            data.couples.forEach(player => {
+                let id = parseInt(player.id.split(' ')[1]); // Es. "GIALLO 005" → prendi 005
+                if (!isNaN(id) && id > maxCouple) maxCouple = id;
+            });
+
+            data.singles.forEach(player => {
+                let id = parseInt(player.id.split(' ')[1]);
+                if (!isNaN(id) && id > maxSingle) maxSingle = id;
+            });
+
+            data.charlie.forEach(player => {
+                let id = parseInt(player.id.split(' ')[1]);
+                if (!isNaN(id) && id > maxCharlie) maxCharlie = id;
+            });
+
+            coupleCounter = maxCouple + 1;
+            singleCounter = maxSingle + 1;
+            charlieCounter = maxCharlie + 1;
+
+            document.getElementById('add-couple-btn').textContent = `Aggiungi Coppia (GIALLO) ${coupleCounter}`;
+            document.getElementById('add-single-btn').textContent = `Aggiungi Singolo (BLU) ${singleCounter}`;
+            document.getElementById('add-charlie-btn').textContent = `Aggiungi Charlie (VERDE) ${charlieCounter}`;
+        })
+        .catch(error => console.error('Errore nel recupero degli ID:', error));
+}
+
 
 document.getElementById('queueForm').addEventListener('submit', function (event) {
     event.preventDefault();
