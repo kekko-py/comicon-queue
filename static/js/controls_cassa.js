@@ -12,26 +12,28 @@ function fetchLastPlayerIds() {
         .then(response => response.json())
         .then(data => {
             let maxCouple = 0, maxSingle = 0, maxCharlie = 0;
-            console.log(data.couples[-1])
-            data.couples.forEach(player => {
-                let id = parseInt(player.id.split(' ')[1]); // Es. "GIALLO 005" → prendi 005
-                if (!isNaN(id) && id > maxCouple) maxCouple = id;
-            });
 
-            data.singles.forEach(player => {
-                let id = parseInt(player.id.split(' ')[1]);
-                if (!isNaN(id) && id > maxSingle) maxSingle = id;
-            });
+            if (data.couples.length > 0) {
+                let lastCouple = data.couples[data.couples.length - 1];
+                maxCouple = parseInt(lastCouple.id.split(' ')[1]) || 0;
+            }
 
-            data.charlie.forEach(player => {
-                let id = parseInt(player.id.split(' ')[1]);
-                if (!isNaN(id) && id > maxCharlie) maxCharlie = id;
-            });
+            if (data.singles.length > 0) {
+                let lastSingle = data.singles[data.singles.length - 1];
+                maxSingle = parseInt(lastSingle.id.split(' ')[1]) || 0;
+            }
 
+            if (data.charlie.length > 0) {
+                let lastCharlie = data.charlie[data.charlie.length - 1];
+                maxCharlie = parseInt(lastCharlie.id.split(' ')[1]) || 0;
+            }
+
+            // Imposta i counter al numero successivo
             coupleCounter = maxCouple + 1;
             singleCounter = maxSingle + 1;
             charlieCounter = maxCharlie + 1;
 
+            // Aggiorna i pulsanti con il valore corretto
             document.getElementById('add-couple-btn').textContent = `Aggiungi Coppia (GIALLO) ${coupleCounter}`;
             document.getElementById('add-single-btn').textContent = `Aggiungi Singolo (BLU) ${singleCounter}`;
             document.getElementById('add-charlie-btn').textContent = `Aggiungi Charlie (VERDE) ${charlieCounter}`;
