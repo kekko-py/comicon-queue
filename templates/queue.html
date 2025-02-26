@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista di Attesa</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='queue.css') }}">
+</head>
+<body>
+
+<h2>Lista di Attesa</h2>
+
+<div class="tabs">
+    <div class="tab active" data-tab="couples">Coppia</div>
+    <div class="tab" data-tab="singles">Singolo</div>
+    <div class="tab" data-tab="charlie">Charlie</div>
+</div>
+
+<div id="couples" class="content active">
+    <h3>Coda Coppie</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Posizione</th>
+            <th>Giocatore</th>
+            <th>Tempo Stimato</th>
+        </tr>
+        </thead>
+        <tbody id="couples-list"></tbody>
+    </table>
+</div>
+
+<div id="singles" class="content">
+    <h3>Coda Singoli</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Posizione</th>
+            <th>Giocatore</th>
+            <th>Tempo Stimato</th>
+        </tr>
+        </thead>
+        <tbody id="singles-list"></tbody>
+    </table>
+</div>
+
+<div id="charlie" class="content">
+    <h3>Coda Charlie</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Posizione</th>
+            <th>Giocatore</th>
+            <th>Tempo Stimato</th>
+        </tr>
+        </thead>
+        <tbody id="charlie-list"></tbody>
+    </table>
+</div>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/queue.css') }}">
+<script src="{{ url_for('static', filename='js/queue.js') }}"></script>
+
+</body>
+</html>

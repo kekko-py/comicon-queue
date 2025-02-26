@@ -3,9 +3,42 @@ from main import GameBackend
 import datetime
 import os
 import pytz
+from pyngrok import ngrok
+import atexit
 
 app = Flask(__name__)
 backend = GameBackend()
+
+# Variabile globale per tenere traccia del tunnel
+tunnel = None
+
+# Funzione per avviare ngrok
+def start_ngrok():
+    global tunnel
+
+    # Chiudi tutti i tunnel ngrok esistenti
+    ngrok.kill()
+
+    # Apri un nuovo tunnel HTTP sulla porta 2000
+    tunnel = ngrok.connect(2000)
+    public_url = tunnel.public_url
+    print(f" * Ngrok tunnel running at: {public_url}")
+    print(f" * Accedi alla queue da: {public_url}/queue")
+
+    # Salva l'URL pubblico in app.config per usarlo nell'applicazione se necessario
+    app.config["BASE_URL"] = public_url
+
+    return public_url
+
+# Registra la funzione di chiusura
+def close_ngrok():
+    global tunnel
+    if tunnel:
+        print(" * Chiusura tunnel ngrok...")
+        ngrok.disconnect(tunnel.public_url)
+        tunnel = None
+
+atexit.register(close_ngrok)
 
 def initialize_queues():
     rome_tz = pytz.timezone('Europe/Rome')
@@ -99,6 +132,11 @@ def add_charlie_player():
         backend.next_player_charlie_locked = True
     
     return jsonify(success=True, player_id=player_id, name=name)
+
+@app.route('/queue')
+def queue():
+    return render_template('queue.html')
+
 
 @app.route('/simulate', methods=['GET'])
 def simulate():
@@ -350,4 +388,9 @@ def delete_player():
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
-    app.run(host='0.0.0.0', port=2000, debug=True)
+
+    # Avvia ngrok prima di eseguire l'app
+    start_ngrok()
+
+    # Esegui Flask con il riavvio automatico disabilitato
+    app.run(host='0.0.0.0', port=2000, debug=True, use_reloader=False)
