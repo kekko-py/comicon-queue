@@ -32,8 +32,16 @@ source venv/bin/activate
 ## Installa le dipendenze richieste con il seguente comando:
 
 ```bash
-pip install flask pytz ngrok
+pip install flask pytz
 ```
+
+## Installa cloudflare:
+
+-Scarica il file cloudflared da https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe 
+
+-Rinominalo "cloudflared.exe" 
+
+-Inseriscilo in C:/Windows/System32
 
 ## Avvio del Progetto in Locale
 
@@ -90,6 +98,9 @@ pip install flask pytz ngrok
 
 - `/queue`  
   Pagina per controllare tutte le piste (ideata per i giocatori).
+
+- `/qrqueue`  
+  Pagina del QRCode per reindirizzare i giocatori alla queue
 
 - Altre rotte (es. `/add_couple`, `/add_single`, `/skip_charlie_player`, `/restore_skipped`, ecc.)  
   Permettono di gestire l'aggiunta di giocatori, saltare un giocatore in coda, ripristinare giocatori "skippati", ottenere il tabellone d'attesa, e altro.
