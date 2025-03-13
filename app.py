@@ -8,14 +8,113 @@ import time
 import atexit
 import qrcode
 from io import BytesIO
+import mysql.connector
+from threading import Thread
 
 app = Flask(__name__)
 backend = GameBackend()
+
+# Configurazione del database MySQL
+db_config = {
+    'host': 'localhost',
+    'user': 'root',
+    'password': '',  # Cambia con la tua password
+    'database': 'stand_db'
+}
+
+
+# Funzione per caricare le code dal database all'avvio
+def load_queues_from_db():
+    try:
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT player_type, player_id, player_name, arrival_time FROM queues ORDER BY created_at DESC")
+        rows = cursor.fetchall()
+
+        backend.queue_couples.clear()
+        backend.queue_singles.clear()
+        backend.queue_charlie.clear()
+
+        for row in rows:
+            player_type, player_id, player_name, arrival_time = row
+            if player_type == 'couple':
+                backend.queue_couples.append({'id': player_id, 'arrival': arrival_time})
+            elif player_type == 'single':
+                backend.queue_singles.append({'id': player_id, 'arrival': arrival_time})
+            elif player_type == 'charlie':
+                backend.queue_charlie.append({'id': player_id, 'arrival': arrival_time})
+
+            backend.player_names[player_id] = player_name
+
+            # Imposta il prossimo giocatore per Charlie
+        if backend.queue_charlie:
+            backend.next_player_charlie_id = backend.queue_charlie[0]['id']
+            backend.next_player_charlie_name = backend.get_player_name(backend.next_player_charlie_id)
+            backend.next_player_charlie_locked = True
+        else:
+            backend.next_player_charlie_id = None
+            backend.next_player_charlie_name = None
+            backend.next_player_charlie_locked = False
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Errore durante il caricamento delle code dal database: {e}")
+
+
+# Carica le code all'avvio dell'applicazione
+load_queues_from_db()
+
+
+def save_queues_to_db():
+    while True:
+        try:
+            conn = mysql.connector.connect(**db_config)
+            cursor = conn.cursor()
+
+            # Cancella le vecchie code
+            cursor.execute("DELETE FROM queues")
+            conn.commit()
+
+            # Salva le code delle coppie
+            for couple in backend.queue_couples:
+                cursor.execute(
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (%s, %s, %s, %s)",
+                    ('couple', couple['id'], backend.get_player_name(couple['id']), couple['arrival'])
+                )
+
+            # Salva le code dei singoli
+            for single in backend.queue_singles:
+                cursor.execute(
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (%s, %s, %s, %s)",
+                    ('single', single['id'], backend.get_player_name(single['id']), single['arrival'])
+                )
+
+            # Salva le code di Charlie
+            for charlie in backend.queue_charlie:
+                cursor.execute(
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (%s, %s, %s, %s)",
+                    ('charlie', charlie['id'], backend.get_player_name(charlie['id']), charlie['arrival'])
+                )
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Errore durante il salvataggio delle code nel database: {e}")
+        time.sleep(10)  # Salva ogni 10 secondi
+
+
+# Avvia il thread per il salvataggio periodico
+save_thread = Thread(target=save_queues_to_db, daemon=True)
+save_thread.start()
 
 # Variabili globali per Cloudflare Tunnel
 tunnel_process = None
 public_url = None
 qr_img = None
+
 
 # Funzione per avviare Cloudflare Tunnel
 def start_cloudflare_tunnel():
@@ -92,6 +191,7 @@ def start_cloudflare_tunnel():
     app.config["BASE_URL"] = public_url
     return public_url
 
+
 # Funzione per fermare Cloudflare Tunnel
 def stop_cloudflare_tunnel():
     global tunnel_process
@@ -101,17 +201,21 @@ def stop_cloudflare_tunnel():
         tunnel_process.wait()
         tunnel_process = None
 
+
 # Registra la funzione di chiusura
 atexit.register(stop_cloudflare_tunnel)
+
 
 def initialize_queues():
     rome_tz = pytz.timezone('Europe/Rome')
     now = datetime.datetime.now(rome_tz)
-    backend.queue_couples.clear()
-    backend.queue_singles.clear()
-    backend.queue_charlie.clear()
+    # backend.queue_couples.clear()
+    # backend.queue_singles.clear()
+    # backend.queue_charlie.clear()
+
 
 initialize_queues()
+
 
 @app.route('/qrqueue')
 def qr_queue():
@@ -121,6 +225,7 @@ def qr_queue():
         return render_template('qrqueue.html', queue_url=queue_url)
     else:
         return "QR code non disponibile. Assicurati che il tunnel sia attivo.", 404
+
 
 @app.route('/qrqueue_img')
 def qr_queue_img():
@@ -133,43 +238,53 @@ def qr_queue_img():
     else:
         return "QR code non disponibile", 404
 
+
 @app.route('/')
 def index():
     return redirect(url_for('dashboard'))
+
 
 @app.route('/controls/cassa')
 def controls_cassa():
     return render_template('controls_cassa.html')
 
+
 @app.route('/controls/couple')
 def controls_couple():
     return render_template('controls_couple.html')
+
 
 @app.route('/controls/single')
 def controls_single():
     return render_template('controls_single.html')
 
+
 @app.route('/controls/charlie')
 def controls_charlie():
     return render_template('controls_charlie.html')
+
 
 @app.route('/get_scores', methods=['GET'])
 def get_scores():
     leaderboard = backend.get_leaderboard()
     return jsonify(leaderboard)
 
+
 @app.route('/scoring')
 def scoring():
     leaderboard = backend.get_leaderboard()
     return render_template('scoring.html', leaderboard=leaderboard)
 
+
 @app.route('/keypad')
 def keypad():
     return render_template('keypad.html')
 
+
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
+
 
 @app.route('/add_couple', methods=['POST'])
 def add_couple():
@@ -181,6 +296,7 @@ def add_couple():
     backend.add_couple(couple_id, name)
     return jsonify(success=True)
 
+
 @app.route('/add_single', methods=['POST'])
 def add_single():
     id = request.json.get('id')
@@ -191,6 +307,7 @@ def add_single():
     backend.add_single(single_id, name)
     return jsonify(success=True)
 
+
 @app.route('/add_charlie', methods=['POST'])
 def add_charlie():
     id = request.json.get('id')
@@ -200,6 +317,7 @@ def add_charlie():
     charlie_id = f"{name.upper()} {int(id):03d}"
     backend.add_charlie_player(charlie_id, name)
     return jsonify(success=True)
+
 
 @app.route('/add_charlie_player', methods=['POST'])
 def add_charlie_player():
@@ -216,6 +334,7 @@ def add_charlie_player():
         backend.next_player_charlie_locked = True
 
     return jsonify(success=True, player_id=player_id, name=name)
+
 
 @app.route('/queue')
 def queue():
@@ -253,7 +372,8 @@ def simulate():
             'estimated_time': time_est
         })
 
-    next_player_alfa_bravo_name = backend.get_player_name(next_player_alfa_bravo_id) if next_player_alfa_bravo_id else None
+    next_player_alfa_bravo_name = backend.get_player_name(
+        next_player_alfa_bravo_id) if next_player_alfa_bravo_id else None
     current_player_alfa = backend.current_player_alfa
     current_player_bravo = backend.current_player_bravo
     current_player_charlie = backend.current_player_charlie
@@ -308,6 +428,7 @@ def simulate():
         charlie_duration=durations.get('charlie', "N/D")
     )
 
+
 @app.route('/button_press', methods=['POST'])
 def button_press():
     button = request.json.get('button')
@@ -318,7 +439,8 @@ def button_press():
             return jsonify(success=False, error="La coda delle coppie è vuota. Non è possibile avviare il gioco.")
 
         backend.start_game(is_couple=True)
-        return jsonify(success=True, start_time=now.isoformat(), current_player_bravo=backend.current_player_bravo , current_player_alfa=backend.current_player_alfa)
+        return jsonify(success=True, start_time=now.isoformat(), current_player_bravo=backend.current_player_bravo,
+                       current_player_alfa=backend.current_player_alfa)
 
     elif button == 'second_start':
         if not backend.queue_singles:
@@ -328,9 +450,11 @@ def button_press():
 
     elif button == 'first_stop':
         if not backend.can_stop_couple():
-            return jsonify(success=False, error="Non è possibile fermare la coppia senza aver prima inserito il codice di metà percorso")
+            return jsonify(success=False,
+                           error="Non è possibile fermare la coppia senza aver prima inserito il codice di metà percorso")
         if backend.current_player_couple:
-            backend.record_couple_game(backend.T_mid, (now - backend.player_start_times[backend.current_player_couple['id']]).total_seconds() / 60)
+            backend.record_couple_game(backend.T_mid, (
+                    now - backend.player_start_times[backend.current_player_couple['id']]).total_seconds() / 60)
             return jsonify(success=True)
         else:
             return jsonify(success=False, error="Nessuna coppia in pista.")
@@ -368,6 +492,7 @@ def button_press():
 
     return jsonify(success=False, error="Pulsante non riconosciuto")
 
+
 @app.route('/skip_next_player_alfa_bravo', methods=['POST'])
 def skip_next_player_alfa_bravo():
     player_id = request.json.get('id')
@@ -401,6 +526,7 @@ def skip_next_player_alfa_bravo():
         next_player_alfa_bravo_name=backend.next_player_alfa_bravo_name
     )
 
+
 @app.route('/skip_charlie_player', methods=['POST'])
 def skip_charlie_player():
     player_id = request.json.get('id')
@@ -410,6 +536,7 @@ def skip_charlie_player():
         return jsonify(success=True, can_start_charlie=can_start_charlie)
     return jsonify(success=False, error="Player ID is required"), 400
 
+
 @app.route('/get_skipped', methods=['GET'])
 def get_skipped():
     return jsonify({
@@ -417,6 +544,7 @@ def get_skipped():
         'singles': [{'id': s['id']} for s in backend.skipped_singles],
         'charlie': [{'id': p['id']} for p in backend.skipped_charlie]
     })
+
 
 @app.route('/restore_skipped_as_next', methods=['POST'])
 def restore_skipped():
@@ -426,19 +554,21 @@ def restore_skipped():
         return jsonify(success=True)
     return jsonify(success=False, error="Player ID is required"), 400
 
+
 @app.route('/check_availability', methods=['GET'])
 def check_availability():
     now = backend.get_current_time()
 
-    alfa_available = (backend.current_player_alfa is None )
-    bravo_available = (backend.current_player_bravo is None )
+    alfa_available = (backend.current_player_alfa is None)
+    bravo_available = (backend.current_player_bravo is None)
 
     return jsonify({
-        'can_start_couple': alfa_available and bravo_available ,
+        'can_start_couple': alfa_available and bravo_available,
         'can_start_single': alfa_available,
         'alfa_status': 'Libera' if alfa_available else 'Occupata',
         'bravo_status': 'Libera' if bravo_available else 'Occupata'
     })
+
 
 @app.route('/start_game', methods=['POST'])
 def start_game_route():
@@ -451,6 +581,7 @@ def start_game_route():
     except Exception as e:
         return jsonify(success=False, error="An unexpected error occurred."), 500
 
+
 @app.route('/get_status', methods=['GET'])
 def get_status():
     now = backend.get_current_time()
@@ -462,6 +593,7 @@ def get_status():
         'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
     })
 
+
 @app.route('/delete_player', methods=['POST'])
 def delete_player():
     player_id = request.json.get('id')
@@ -469,6 +601,7 @@ def delete_player():
         backend.delete_player(player_id)
         return jsonify(success=True)
     return jsonify(success=False, error="Player ID is required"), 400
+
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
