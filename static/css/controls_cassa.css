@@ -35,6 +35,11 @@
     margin-top: 2rem;
 }
 
+.box-add {
+    justify-content: center;
+    gap: 20px;
+}
+
 .btn {
     padding: 1rem 2rem;
     border: none;
@@ -78,16 +83,25 @@
 .btn-yellow {
     background: #FFEB3B;
     color: black;
+    width: 100%;
 }
 
 .btn-blue {
     background: #2196F3;
     color: white;
+    width: 100%;
+}   
+
+.btn-red {
+    background: #f44336;
+    color: white;
+    width: 100%;
 }
 
 .btn-green {
     background: #4CAF50;
     color: white;
+    width: 100%;
 }
 
 .btn-start:hover:not(:disabled) {
