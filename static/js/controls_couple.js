@@ -8,9 +8,9 @@ function updateNextPlayer() {
         .then(data => {
             if (data.couples && data.couples.length > 0) {
                 const nextPlayer = data.couples[0];  // Ora sarà un oggetto con id e name
-                $('#next-player').text(`${nextPlayer.id}`);
+                $('#next-player').text(`${nextPlayer.name} - ${nextPlayer.id}`);
                 $('#next-player-btn').prop('disabled', false);
-                console.log(`Next player to start: ${nextPlayer.id}`);  // Log del prossimo giocatore
+                console.log(`Next player to start: ${nextPlayer.name} - ${nextPlayer.id}`);  // Log del prossimo giocatore
             } else {
                 $('#next-player').text('-');
                 $('#next-player-btn').prop('disabled', true);

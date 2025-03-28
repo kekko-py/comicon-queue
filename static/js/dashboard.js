@@ -26,7 +26,7 @@ function updateDashboard() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
           couplesBoard.appendChild(li);
         });
       }
@@ -41,7 +41,7 @@ function updateDashboard() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
           singlesBoard.appendChild(li);
         });
       }
@@ -54,15 +54,6 @@ function updateDashboard() {
         }
       }
 
-      // se non ci sono charlie in coda nella board, resettami il prossimo giocatore
-      if (data.charlie.length === 0) {
-        const nextCharlieText = document.getElementById("next-charlie-text");
-        if (nextCharlieText) {
-          nextCharlieText.textContent = "Nessun Giocatore in coda";
-        }
-      }
-
-
       // Aggiorna la coda Charlie
       const charlieBoard = document.getElementById("charlie-board");
       if (charlieBoard) {
@@ -73,7 +64,7 @@ function updateDashboard() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
           charlieBoard.appendChild(li);
         });
       }
@@ -332,7 +323,7 @@ function updateSkipped() {
     .then((response) => response.json())
     .then((data) => {
       const skippedCouplesContainer = document.getElementById("skipped-couples-buttons");
-      const skippedSinglesContainer = document.getElementById("skipped-couples-buttons");
+      const skippedSinglesContainer = document.getElementById("skipped-singles-buttons");
       const skippedCharlieContainer = document.getElementById("skipped-charlie-buttons");
 
       skippedCouplesContainer.innerHTML = "";
@@ -406,7 +397,7 @@ function updateBoards() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
           couplesBoard.appendChild(li);
         });
       }
@@ -421,7 +412,7 @@ function updateBoards() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
           singlesBoard.appendChild(li);
         });
       }
@@ -444,7 +435,7 @@ function updateBoards() {
               ? "PROSSIMO INGRESSO"
               : formatTimeRome(player.estimated_time);
           const li = document.createElement("li");
-          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button onclick="deletePlayer('${player.id}')"><img src="/static/icons/trash.svg" alt="Delete"></button>`;
+          li.textContent = `${player.name} ${player.id} - Ingresso: ${timeDisplay}`;
           charlieBoard.appendChild(li);
         });
       }
@@ -555,24 +546,6 @@ function addCharliePlayer() {
         updateDashboard(); // Update the dashboard to reflect the new Charlie player
       } else {
         alert("Errore nell'aggiunta del giocatore.");
-      }
-    });
-}
-
-function deletePlayer(playerId) {
-  fetch(`/delete_player`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ id: playerId }),
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      if (data.success) {
-        updateDashboard();
-      } else {
-        alert("Errore nella cancellazione del giocatore.");
       }
     });
 }

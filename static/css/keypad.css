@@ -1,5 +1,5 @@
 .keypad-container {
-    background: #F5EBEB; /* fourth-color */
+    background: white;
     border-radius: 10px;
     padding: 2rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -27,7 +27,7 @@
 }
 
 .key {
-    background: #3AB1C8; /* third-color */
+    background: #e3f2fd;
     border: none;
     padding: 1.5rem;
     font-size: 1.5em;
@@ -37,7 +37,7 @@
 }
 
 .key:hover {
-    background: #2772DB; /* second-color */
+    background: #bbdefb;
 }
 
 .key:active {

@@ -1,93 +1,50 @@
 .status-container {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   gap: 20px;
   margin-bottom: 30px;
-  height: 100%;
 }
-
-.main-box {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 20px;
-  width: 100%;
-}
-
-html, body, .container {
-    width: 100%;
-    padding: 0px;
-}
-
-.big-box {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  gap: 20px;
-}
-
-#main-box1 {
-  height: 450px;
-}
-
-#main-box2 {
-  height: 260px;
-}
-
-#main-box3 {
-  height: 450px;
-}
-
 
 .status-box {
-  background: #F5EBEB; /* fourth-color */
+  background: white;
   border-radius: 10px;
   padding: 20px;
   width: 250px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 100%;
 }
 
 .status-box.occupied {
-  color: #ffffff;
-  background: #00000080;
+  background: #ffebee;
   border-left: 5px solid #ef5350;
 }
 
 .status-box.free {
-  color: #ffffff;
-  background: #00000080;
+  background: #354b37;
   border-left: 5px solid #66bb6a;
 }
 
 .boards-container {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   gap: 30px;
-  height: 100%;
 }
 
 .board {
-  overflow-y: auto;
-  background: #00000080; /* fourth-color */
-  border: 1px solid #ffffff;
+  background: white;
   border-radius: 10px;
   padding: 20px;
-  width: 500px;
-  height: 100%;
+  width: 300px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-size: 0.9em;
 }
 
 .board h2 {
-  color: #ffffff; /* first-color */
+  color: #1a237e;
   margin-bottom: 15px;
   text-align: center;
 }
 
 .board ul {
   list-style: none;
-  color: #ffffff;
   padding: 0;
 }
 
@@ -150,11 +107,11 @@ html, body, .container {
 }
 
 .next-player-card {
-  background: #3AB1C8; /* third-color */
+  background: #354b37;
   border-radius: 10px;
   padding: 20px;
   margin: 30px auto;
-  width: 600px;
+  max-width: 600px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
@@ -168,7 +125,7 @@ html, body, .container {
 }
 
 .next-player-title {
-  color: #ffffff; /* first-color */
+  color: #1a237e;
   font-size: 1.2em;
   margin-bottom: 10px;
 }
@@ -176,7 +133,7 @@ html, body, .container {
 .next-player-charlie {
   font-size: 2.5em;
   font-weight: bold;
-  color: #ffd700;
+  color: #2e7d32;
   margin: 15px 0;
 }
 
@@ -201,7 +158,7 @@ html, body, .container {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  background: #ffd700;
+  background: white;
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 5px 15px;
@@ -232,7 +189,7 @@ html, body, .container {
 }
 
 .skipped-title {
-  color: #070F4E; /* first-color */
+  color: #1a237e;
   font-size: 1.2em;
   margin-bottom: 15px;
   text-align: center;
@@ -269,19 +226,15 @@ html, body, .container {
 
 /* Aggiungi questi stili per i pulsanti skippati */
 .skipped-container {
-  overflow-y: auto;
-  max-height: 100%;
-  width: 100%;
-  height: 100%;
-  background: #00000080; /* fourth-color */
+  background: white;
   border-radius: 10px;
   padding: 20px;
+  margin: 20px 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #ffffff;
 }
 
 .skipped-title {
-  color: #ffffff; /* first-color */
+  color: #1a237e;
   margin-bottom: 15px;
   text-align: center;
   font-size: 1.2em;
@@ -290,20 +243,18 @@ html, body, .container {
 .skipped-buttons {
   display: flex;
   flex-wrap: wrap;
-  width: 100%;
-  height: 100%;
-  gap: 50px;
-  justify-content: space-between;
+  gap: 10px;
+  justify-content: center;
 }
 
 .skipped-button {
-  padding: 50px 150px;
+  padding: 5px 15px;
   border-radius: 15px;
   border: 1px solid #ddd;
   background: #f8f9fa;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 2em;
+  font-size: 0.9em;
 }
 
 .skipped-button:hover {
@@ -325,21 +276,21 @@ html, body, .container {
 
 /* Stili per le card dei prossimi giocatori */
 .next-players-container {
-  height: 100%;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   gap: 20px;
+  margin: 20px 0;
 }
 
 .next-player-card {
   flex: 1;
-  margin: 0;
-  background: #00000080;
-  border: 1px solid #ffffff;
+  max-width: 400px;
+  background: white;
   border-radius: 10px;
   padding: 20px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .skipped-button {
@@ -373,18 +324,4 @@ html, body, .container {
   width: 24px;
   height: 24px;
   margin-right: 10px;
-}
-
-.trash-icon {
-  width: 24px;
-  height: 24px;
-  margin-left: 10px;
-  color: #e53935;
-  /* Red color that harmonizes with the existing colors */
-}
-
-.trash-button {
-  border-width: 0;
-  height: 24px;
-  background: none;
 }
