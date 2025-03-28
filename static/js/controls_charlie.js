@@ -8,18 +8,14 @@ function updateNextPlayer() {
         .then(data => {
             if (data.charlie && data.charlie.length > 0) {
                 const nextPlayer = data.charlie[0];  // Ora sarà un oggetto con id e name
-                $('#next-player').text(`${nextPlayer.name} - ${nextPlayer.id}`);
+                $('#next-player').text(`${nextPlayer.id}`);
                 $('#next-player-btn').prop('disabled', false);
-                console.log(`Next player to start: ${nextPlayer.name} - ${nextPlayer.id}`);  // Log del prossimo giocatore
+                console.log(`Next player to start: ${nextPlayer.id}`);  // Log del prossimo giocatore
             } else {
                 $('#next-player').text('-');
                 $('#next-player-btn').prop('disabled', true);
             }
-            if (data.current_player_charlie) {
-                $('#current-player').text(`${data.current_player_charlie['name']} - ${data.current_player_charlie['id']}`);
-            } else {
-                $('#current-player').text('-');
-            }
+
             updateTrackStatus(data);
         });
 }

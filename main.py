@@ -625,6 +625,30 @@ class GameBackend:
                 durations['charlie'] = f"{minutes:02}:{seconds:02}"
         return durations
 
+    def delete_player(self, player_id: str) -> None:
+        """Elimina un giocatore dalla coda"""
+        self.queue_couples = [p for p in self.queue_couples if p['id'] != player_id]
+        self.queue_singles = [p for p in self.queue_singles if p['id'] != player_id]
+        self.queue_charlie = [p for p in self.queue_charlie if p['id'] != player_id]
+        self.skipped_couples = [p for p in self.skipped_couples if p['id'] != player_id]
+        self.skipped_singles = [p for p in self.skipped_singles if p['id'] != player_id]
+        self.skipped_charlie = [p for p in self.skipped_charlie if p['id'] != player_id]
+
+        # Check if the deleted player was the next player in the queue
+        if self.next_player_alfa_bravo_id == player_id:
+            self.next_player_alfa_bravo_id = None
+            self.next_player_alfa_bravo_name = None
+            self.next_player_alfa_bravo_locked = False
+            self.update_next_player()
+
+        if self.next_player_charlie_id == player_id:
+            self.next_player_charlie_id = None
+            self.next_player_charlie_name = None
+            self.next_player_charlie_locked = False
+            self.update_next_player()
+        
+        
+
 if __name__ == '__main__':
     backend = GameBackend()
     
@@ -655,3 +679,4 @@ if __name__ == '__main__':
     for pos, cid, time_est in charlie_board:
       time_str = time_est.strftime('%H:%M:%S') if isinstance(time_est, datetime.datetime) else time_est if time_est else 'N/D'
     print(f"{pos}. {cid} - Ingresso stimato: {time_str}")
+
