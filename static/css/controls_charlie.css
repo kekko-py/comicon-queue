@@ -1,5 +1,5 @@
 .control-panel {
-    background: #F5EBEB; /* fourth-color */
+    background: white;
     border-radius: 10px;
     padding: 2rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -18,7 +18,7 @@
 
 .current-player {
     margin-bottom: 1rem;
-    color: #070F4E; /* first-color */
+    color: #1a237e;
     font-weight: bold;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .btn-start {
-    background: #2772DB; /* second-color */
+    background: #ffc107;  /* Colore Charlie */
     color: black;
 }
 
