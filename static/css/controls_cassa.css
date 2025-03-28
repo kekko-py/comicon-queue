@@ -1,6 +1,8 @@
 .control-panel {
-    background: white;
+    background: #00000080; /* fourth-color */
     border-radius: 10px;
+    color: #ffffff;
+    border: 1px solid #ffffff;
     padding: 2rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     max-width: 500px;
@@ -18,7 +20,7 @@
 
 .current-player {
     margin-bottom: 1rem;
-    color: #1a237e;
+    color: #070F4E; /* first-color */
     font-weight: bold;
 }
 
@@ -87,7 +89,7 @@
 }
 
 .btn-blue {
-    background: #2196F3;
+    background: #2772DB; /* second-color */
     color: white;
     width: 100%;
 }   

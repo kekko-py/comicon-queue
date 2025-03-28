@@ -332,7 +332,7 @@ function updateSkipped() {
     .then((response) => response.json())
     .then((data) => {
       const skippedCouplesContainer = document.getElementById("skipped-couples-buttons");
-      const skippedSinglesContainer = document.getElementById("skipped-singles-buttons");
+      const skippedSinglesContainer = document.getElementById("skipped-couples-buttons");
       const skippedCharlieContainer = document.getElementById("skipped-charlie-buttons");
 
       skippedCouplesContainer.innerHTML = "";
