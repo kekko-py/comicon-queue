@@ -23,17 +23,18 @@ logging.basicConfig(level=logging.DEBUG)
 
 sqlite_lock = Lock()
 SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
-
+BASE_URL = "http://localhost:2000"  # Bisogna cambiarlo con il sito delle queue si mercenari socs che andremo a creare
+qr_img = None
 
 def init_sqlite():
-    logging.debug("Acquisizione del lock per SQLite")
+    logging.debug("[QUEUES] Acquisizione del lock per SQLite")
     with sqlite_lock:
-        logging.debug("Lock acquisito")
+        logging.debug("[QUEUES] Lock acquisito")
 
         conn = sqlite3.connect(SQLITE_DB_PATH)
         cursor = conn.cursor()
 
-        logging.debug("Creazione tabella, se non esiste")
+        logging.debug("[QUEUES] Creazione tabella, se non esiste")
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS queues (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,7 +49,7 @@ def init_sqlite():
         conn.commit()
         conn.close()
 
-        logging.debug("Connessione chiusa e lock rilasciato")
+        logging.debug("[QUEUES] Connessione chiusa e lock rilasciato")
 
 
 # Chiama la funzione per inizializzare il database
@@ -56,14 +57,14 @@ init_sqlite()
 
 
 def init_scoring_table():
-    logging.debug("Acquisizione del lock per SQLite (scoring)")
+    logging.debug("[SCORING] Acquisizione del lock per SQLite")
     with sqlite_lock:
-        logging.debug("Lock acquisito (scoring)")
+        logging.debug("[SCORING] Lock acquisito")
 
         conn = sqlite3.connect(SQLITE_DB_PATH)
         cursor = conn.cursor()
 
-        logging.debug("Creazione tabella scoring, se non esiste")
+        logging.debug("[SCORING] Creazione tabella scoring, se non esiste")
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS scoring (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,22 +78,21 @@ def init_scoring_table():
 
         conn.commit()
         conn.close()
-        logging.debug("Connessione chiusa e lock rilasciato (scoring)")
+        logging.debug("[SCORING] Connessione chiusa e lock rilasciato")
 
 
 # Chiama la funzione per inizializzare la tabella scoring
 init_scoring_table()
 
-# Aggiungi questa funzione dopo init_scoring_table()
 def init_skipped_table():
-    logging.debug("Acquisizione del lock per SQLite (skipped)")
+    logging.debug("[SKIPPED] Acquisizione del lock per SQLite")
     with sqlite_lock:
-        logging.debug("Lock acquisito (skipped)")
+        logging.debug("[SKIPPED] Lock acquisito")
 
         conn = sqlite3.connect(SQLITE_DB_PATH)
         cursor = conn.cursor()
 
-        logging.debug("Creazione tabella skipped_players, se non esiste")
+        logging.debug("[SKIPPED] Creazione tabella skipped_players, se non esiste")
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS skipped_players (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,7 +106,7 @@ def init_skipped_table():
 
         conn.commit()
         conn.close()
-        logging.debug("Connessione chiusa e lock rilasciato (skipped)")
+        logging.debug("[SKIPPED] Connessione chiusa e lock rilasciato")
 
 # Chiama la funzione per inizializzare la tabella skipped_players
 init_skipped_table()
@@ -304,100 +304,6 @@ def save_queues_to_db():
 save_thread = Thread(target=save_queues_to_db, daemon=True)
 save_thread.start()
 
-# Variabili globali per Cloudflare Tunnel
-tunnel_process = None
-public_url = None
-qr_img = None
-
-
-# Funzione per avviare Cloudflare Tunnel
-def start_cloudflare_tunnel():
-    global tunnel_process, public_url, qr_img
-    # Chiude eventuali tunnel esistenti
-    stop_cloudflare_tunnel()
-    print(" * Avvio Cloudflare Tunnel...")
-
-    # Avvia Cloudflare Tunnel sulla porta 2000
-    tunnel_process = subprocess.Popen(
-        ["cloudflared", "tunnel", "--url", "http://localhost:2000"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1  # Buffering line by line
-    )
-    # Legge l'output del tunnel per trovare l'URL pubblico
-    public_url = None
-    start_time = time.time()
-    timeout = 120  # 120 secondi di timeout (2 minuti)
-
-    print(" * In attesa dell'URL del tunnel (potrebbe richiedere fino a 2 minuti)...")
-
-    url_pattern = r'https://[a-zA-Z0-9\-]+\.trycloudflare\.com'
-
-    while time.time() - start_time < timeout:
-        line = tunnel_process.stdout.readline()
-        if not line:  # Se non ci sono più righe da leggere
-            if tunnel_process.poll() is not None:
-                break
-            time.sleep(0.1)
-            continue
-
-        # Controlla se la linea contiene la parte specifica che indica l'URL del tunnel
-        if "Your quick Tunnel has been created" in line or "Visit it at" in line:
-            print(" * Trovato indicatore di URL tunnel")
-
-        # Cerca specificamente il pattern dell'URL trycloudflare
-        if "trycloudflare.com" in line:
-            import re
-            url_match = re.search(url_pattern, line)
-            if url_match:
-                public_url = url_match.group(0)
-                print(f" * Trovato URL del tunnel: {public_url}")
-
-                # Genera il QR code per l'URL della queue
-                queue_url = f"{public_url}/queue"
-                qr = qrcode.QRCode(
-                    version=1,
-                    error_correction=qrcode.constants.ERROR_CORRECT_L,
-                    box_size=10,
-                    border=4,
-                )
-                qr.add_data(queue_url)
-                qr.make(fit=True)
-
-                # Crea un'immagine dal QR code
-                qr_img = qr.make_image(fill_color="black", back_color="white")
-
-                print(f" * QR code generato per: {queue_url}")
-                break
-
-        # Piccola pausa per non sovraccaricare la CPU
-        time.sleep(0.1)
-    if public_url:
-        print(f" * Cloudflare Tunnel running at: {public_url}")
-        print(f" * Accedi alla queue da: {public_url}/queue")
-        print(f" * Visualizza QR code della queue: {public_url}/qrqueue")
-    else:
-        print(" * Errore: Impossibile trovare l'URL pubblico del tunnel.")
-        print(" * Il tunnel potrebbe essere attivo ma non è stato possibile trovare l'URL.")
-        print(" * Prova a controllare l'output del comando manuale: cloudflared tunnel --url http://localhost:2000")
-    # Salva l'URL pubblico in app.config
-    app.config["BASE_URL"] = public_url
-    return public_url
-
-
-# Funzione per fermare Cloudflare Tunnel
-def stop_cloudflare_tunnel():
-    global tunnel_process
-    if tunnel_process:
-        print(" * Chiusura tunnel Cloudflare...")
-        tunnel_process.terminate()
-        tunnel_process.wait()
-        tunnel_process = None
-
-
-# Registra la funzione di chiusura
-atexit.register(stop_cloudflare_tunnel)
 
 
 def initialize_queues():
@@ -410,27 +316,35 @@ def initialize_queues():
 
 initialize_queues()
 
+# Funzione per generare il QR code
+def generate_qrcode(url):
+    import qrcode
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+    return qr.make_image(fill_color="black", back_color="white")
 
 @app.route('/qrqueue')
 def qr_queue():
-    global public_url
-    if public_url:
-        queue_url = f"{public_url}/queue"
-        return render_template('qrqueue.html', queue_url=queue_url)
-    else:
-        return "QR code non disponibile. Assicurati che il tunnel sia attivo.", 404
-
+    queue_url = f"{BASE_URL}/queue"
+    return render_template('qrqueue.html', queue_url=queue_url)
 
 @app.route('/qrqueue_img')
 def qr_queue_img():
     global qr_img
-    if qr_img:
-        img_io = BytesIO()
-        qr_img.save(img_io, 'PNG')
-        img_io.seek(0)
-        return send_file(img_io, mimetype='image/png')
-    else:
-        return "QR code non disponibile", 404
+    if qr_img is None:
+        queue_url = f"{BASE_URL}/queue"
+        qr_img = generate_qrcode(queue_url)
+    
+    img_io = BytesIO()
+    qr_img.save(img_io, 'PNG')
+    img_io.seek(0)
+    return send_file(img_io, mimetype='image/png')
 
 
 @app.route('/')
@@ -812,8 +726,8 @@ sync_thread.start()
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
 
-    # Avvia Cloudflare Tunnel prima di eseguire l'app
-    start_cloudflare_tunnel()
+    queue_url = f"{BASE_URL}/queue"
+    qr_img = generate_qrcode(queue_url)
 
     # Esegui Flask con il riavvio automatico disabilitato
     app.run(host='0.0.0.0', port=2000, debug=True, use_reloader=False)
