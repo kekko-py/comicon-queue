@@ -7,26 +7,125 @@ import subprocess
 import time
 import atexit
 import qrcode
+import logging
+import sqlite3
+import time
+import subprocess
 from io import BytesIO
-import mysql.connector
 from threading import Thread
+from threading import Lock
 
 app = Flask(__name__)
 backend = GameBackend()
 
-# Configurazione del database MySQL
-db_config = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',  # Cambia con la tua password
-    'database': 'stand_db'
-}
+# Impostazioni logging
+logging.basicConfig(level=logging.DEBUG)
+
+sqlite_lock = Lock()
+SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
+
+
+def init_sqlite():
+    logging.debug("Acquisizione del lock per SQLite")
+    with sqlite_lock:
+        logging.debug("Lock acquisito")
+
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+
+        logging.debug("Creazione tabella, se non esiste")
+        cursor.execute(''' 
+            CREATE TABLE IF NOT EXISTS queues (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie')) NOT NULL,
+                player_id TEXT NOT NULL,
+                player_name TEXT NOT NULL,
+                arrival_time DATETIME NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        conn.commit()
+        conn.close()
+
+        logging.debug("Connessione chiusa e lock rilasciato")
+
+
+# Chiama la funzione per inizializzare il database
+init_sqlite()
+
+
+def init_scoring_table():
+    logging.debug("Acquisizione del lock per SQLite (scoring)")
+    with sqlite_lock:
+        logging.debug("Lock acquisito (scoring)")
+
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+
+        logging.debug("Creazione tabella scoring, se non esiste")
+        cursor.execute(''' 
+            CREATE TABLE IF NOT EXISTS scoring (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie')) NOT NULL,
+                player_id TEXT NOT NULL,
+                player_name TEXT NOT NULL,
+                score TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        conn.commit()
+        conn.close()
+        logging.debug("Connessione chiusa e lock rilasciato (scoring)")
+
+
+# Chiama la funzione per inizializzare la tabella scoring
+init_scoring_table()
+
+
+def load_scores_from_db():
+    try:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT player_type, player_id, player_name, score FROM scoring ORDER BY created_at DESC")
+        rows = cursor.fetchall()
+
+        # Pulisci gli storici esistenti
+        backend.couple_history_total.clear()
+        backend.single_history.clear()
+        backend.charlie_history.clear()
+
+        for row in rows:
+            player_type, player_id, player_name, score = row
+            # Converti il punteggio da stringa a float (es. "2m 30s" → 2.5)
+            if 'm' in score:
+                minutes = float(score.split('m')[0])
+                seconds = float(score.split('m')[1].split('s')[0]) if 's' in score else 0
+                score_minutes = minutes + (seconds / 60)
+
+                if player_type == 'couple':
+                    backend.couple_history_total.append(score_minutes)
+                elif player_type == 'single':
+                    backend.single_history.append(score_minutes)
+                elif player_type == 'charlie':
+                    backend.charlie_history.append(score_minutes)
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Errore durante il caricamento degli score dal database: {e}")
+
+
+# Carica gli score all'avvio dell'applicazione
+load_scores_from_db()
 
 
 # Funzione per caricare le code dal database all'avvio
 def load_queues_from_db():
     try:
-        conn = mysql.connector.connect(**db_config)
+        conn = sqlite3.connect(SQLITE_DB_PATH)
         cursor = conn.cursor()
 
         cursor.execute("SELECT player_type, player_id, player_name, arrival_time FROM queues ORDER BY created_at DESC")
@@ -70,7 +169,7 @@ load_queues_from_db()
 def save_queues_to_db():
     while True:
         try:
-            conn = mysql.connector.connect(**db_config)
+            conn = sqlite3.connect(SQLITE_DB_PATH)
             cursor = conn.cursor()
 
             # Cancella le vecchie code
@@ -80,26 +179,43 @@ def save_queues_to_db():
             # Salva le code delle coppie
             for couple in backend.queue_couples:
                 cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (%s, %s, %s, %s)",
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?) ",
                     ('couple', couple['id'], backend.get_player_name(couple['id']), couple['arrival'])
                 )
 
             # Salva le code dei singoli
             for single in backend.queue_singles:
                 cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (%s, %s, %s, %s)",
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
                     ('single', single['id'], backend.get_player_name(single['id']), single['arrival'])
                 )
 
             # Salva le code di Charlie
             for charlie in backend.queue_charlie:
                 cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (%s, %s, %s, %s)",
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
                     ('charlie', charlie['id'], backend.get_player_name(charlie['id']), charlie['arrival'])
                 )
 
+            # Salva gli score
+            cursor.execute("DELETE FROM scoring")
+            for i, score in enumerate(backend.couple_history_total):
+                cursor.execute(
+                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
+                    ('couple', f"COMPLETATO-{i + 1}", f"COMPLETATO-{i + 1}", backend.format_time(score))
+                )
+            for i, score in enumerate(backend.single_history):
+                cursor.execute(
+                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
+                    ('single', f"COMPLETATO-{i + 1}", f"COMPLETATO-{i + 1}", backend.format_time(score))
+                )
+            for i, score in enumerate(backend.charlie_history):
+                cursor.execute(
+                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
+                    ('charlie', f"COMPLETATO-{i + 1}", f"COMPLETATO-{i + 1}", backend.format_time(score))
+                )
+
             conn.commit()
-            cursor.close()
             conn.close()
         except Exception as e:
             print(f"Errore durante il salvataggio delle code nel database: {e}")
@@ -602,6 +718,18 @@ def delete_player():
         return jsonify(success=True)
     return jsonify(success=False, error="Player ID is required"), 400
 
+
+def run_sync_script_periodically():
+    while True:
+        # Esegui lo script Python
+        subprocess.run(['python', 'sync_script.py'])
+        # Aspetta 2 minuti (120 secondi)
+        time.sleep(120)
+
+
+# Avvia il thread separato
+sync_thread = Thread(target=run_sync_script_periodically, daemon=True)
+sync_thread.start()
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
