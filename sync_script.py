@@ -75,7 +75,39 @@ def sync_scoring_table():
     except Exception as e:
         print(f"Errore durante la sincronizzazione della tabella scoring: {e}")
 
+def sync_skipped_table():
+    try:
+        # Connessione a SQLite
+        sqlite_conn = sqlite3.connect(SQLITE_DB_PATH)
+        sqlite_cursor = sqlite_conn.cursor()
+
+        # Connessione a MySQL (Aruba)
+        aruba_conn = mysql.connector.connect(**ARUBA_DB_CONFIG)
+        aruba_cursor = aruba_conn.cursor()
+
+        # Leggi dati da SQLite
+        sqlite_cursor.execute("SELECT player_type, player_id, player_name, skipped_at FROM skipped_players")
+        rows = sqlite_cursor.fetchall()
+
+        # Sincronizza con Aruba
+        aruba_cursor.execute("DELETE FROM skipped_players")
+        
+        for player_type, player_id, player_name, skipped_at in rows:
+            aruba_cursor.execute(
+                "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) "
+                "VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE "
+                "player_name = VALUES(player_name), skipped_at = VALUES(skipped_at)",
+                (player_type, player_id, player_name, skipped_at)
+            )
+
+        aruba_conn.commit()
+        aruba_conn.close()
+        sqlite_conn.close()
+    except Exception as e:
+        print(f"Errore durante la sincronizzazione della tabella skipped_players: {e}")
+
 
 if __name__ == '__main__':
     sync_table('queues')
     sync_scoring_table()
+    sync_skipped_table()

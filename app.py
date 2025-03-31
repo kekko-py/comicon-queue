@@ -83,6 +83,66 @@ def init_scoring_table():
 # Chiama la funzione per inizializzare la tabella scoring
 init_scoring_table()
 
+# Aggiungi questa funzione dopo init_scoring_table()
+def init_skipped_table():
+    logging.debug("Acquisizione del lock per SQLite (skipped)")
+    with sqlite_lock:
+        logging.debug("Lock acquisito (skipped)")
+
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+
+        logging.debug("Creazione tabella skipped_players, se non esiste")
+        cursor.execute(''' 
+            CREATE TABLE IF NOT EXISTS skipped_players (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie')) NOT NULL,
+                player_id TEXT NOT NULL,
+                player_name TEXT NOT NULL,
+                skipped_at DATETIME NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        conn.commit()
+        conn.close()
+        logging.debug("Connessione chiusa e lock rilasciato (skipped)")
+
+# Chiama la funzione per inizializzare la tabella skipped_players
+init_skipped_table()
+
+# Aggiungi questa funzione per caricare gli skippati all'avvio
+def load_skipped_from_db():
+    try:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT player_type, player_id, player_name FROM skipped_players ORDER BY created_at DESC")
+        rows = cursor.fetchall()
+
+        # Pulisci le liste esistenti
+        backend.skipped_couples.clear()
+        backend.skipped_singles.clear()
+        backend.skipped_charlie.clear()
+
+        for row in rows:
+            player_type, player_id, player_name = row
+            player_data = {'id': player_id, 'name': player_name}
+            
+            if player_type == 'couple':
+                backend.skipped_couples.append(player_data)
+            elif player_type == 'single':
+                backend.skipped_singles.append(player_data)
+            elif player_type == 'charlie':
+                backend.skipped_charlie.append(player_data)
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Errore durante il caricamento degli skippati dal database: {e}")
+
+# Carica gli skippati all'avvio dell'applicazione
+load_skipped_from_db()
 
 def load_scores_from_db():
     try:
@@ -213,6 +273,24 @@ def save_queues_to_db():
                 cursor.execute(
                     "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
                     ('charlie', f"COMPLETATO-{i + 1}", f"COMPLETATO-{i + 1}", backend.format_time(score))
+                )
+
+            # Salva gli skippati
+            cursor.execute("DELETE FROM skipped_players")
+            for player in backend.skipped_couples:
+                cursor.execute(
+                    "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) VALUES (?, ?, ?, ?)",
+                    ('couple', player['id'], backend.get_player_name(player['id']), datetime.datetime.now())
+                )
+            for player in backend.skipped_singles:
+                cursor.execute(
+                    "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) VALUES (?, ?, ?, ?)",
+                    ('single', player['id'], backend.get_player_name(player['id']), datetime.datetime.now())
+                )
+            for player in backend.skipped_charlie:
+                cursor.execute(
+                    "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) VALUES (?, ?, ?, ?)",
+                    ('charlie', player['id'], backend.get_player_name(player['id']), datetime.datetime.now())
                 )
 
             conn.commit()
