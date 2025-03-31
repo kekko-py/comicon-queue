@@ -32,7 +32,7 @@ source venv/bin/activate
 ## Installa le dipendenze richieste con il seguente comando:
 
 ```bash
-pip install flask pytz ngrok
+pip install flask pytz mysql-connector
 ```
 
 ## Avvio del Progetto in Locale
@@ -60,12 +60,6 @@ pip install flask pytz ngrok
 
    Da qui potrai accedere alla dashboard e alle altre pagine di controllo (es. `/controls/cassa`, `/controls/couple`, `/controls/single`, `/controls/charlie`).
 
-5. **Accedi alla queue pubblica**  
-   Dopo aver avviato il server, apri il link che viene mostrato nel terminale:
-
-   ```
-   * Accedi alla queue da: https://urlgeneratodangrok
-   ```
 
 
 ## Rotte Principali
@@ -90,6 +84,9 @@ pip install flask pytz ngrok
 
 - `/queue`  
   Pagina per controllare tutte le piste (ideata per i giocatori).
+
+- `/qrqueue`  
+  Pagina di visualizzazione del qrcode per accedere alla queue.
 
 - Altre rotte (es. `/add_couple`, `/add_single`, `/skip_charlie_player`, `/restore_skipped`, ecc.)  
   Permettono di gestire l'aggiunta di giocatori, saltare un giocatore in coda, ripristinare giocatori "skippati", ottenere il tabellone d'attesa, e altro.
