@@ -6,8 +6,8 @@
   }
   
   body {
-    background: #556959;
-    padding: 20px;
+    background: #070f4e;
+    padding: 5px;
   }
   
   .container {
@@ -17,7 +17,7 @@
   
   h1 {
     text-align: center;
-    color: #1a237e;
+    color: #f5ebeb;
     margin-bottom: 30px;
     font-size: 2.5em;
   }
