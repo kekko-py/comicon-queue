@@ -8,14 +8,14 @@
 <h1>Controllo STATICO</h1>
 
 <div class="game-info">
+    <!-- <div class="next-player">
+        Prossimo giocatore: <span id="next-player">-</span>
+    </div> -->
     <div class="current-player">
         Giocatore in DELTA: <span id="current-player-delta">-</span>
     </div>
     <div class="current-player">
         Giocatore in ECHO: <span id="current-player-echo">-</span>
-    </div>
-    <div class="next-player">
-        Prossimo giocatore: <span id="next-player">-</span>
     </div>
     <div class="game-timer">
         Tempo trascorso DELTA: <span id="timer-delta">00:00</span>
@@ -54,7 +54,30 @@
         </div>
     </div>
 </div>
-{% endblock %}
+<br>
+<div class="col">
+<div class="next-players-container">
+       
+    <!-- Card per Statico -->
+    <div class="next-player-card">
+      <div class="next-player-title">Prossimo Giocatore Statico:</div>
+      <div class="next-player-charlie" id="next-player">
+        Nessun Giocatore In Coda
+      </div>
+      <button class="skip-button" onclick="skipNextPlayerStatico()">
+        SKIP <span class="skip-icon">>></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="skipped-container">
+    <div class="skipped-title">Giocatori Skippati</div>
+    <div class="skipped-buttons">
+      <div id="skipped-statico-buttons"></div> <!-- Aggiungi questo div -->
+      </div>
+    </div>
+  </div>{% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/controls_statico.js') }}"></script>

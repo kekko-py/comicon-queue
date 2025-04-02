@@ -6,7 +6,6 @@ import pytz
 import subprocess
 import time
 import atexit
-import qrcode
 import logging
 import sqlite3
 import time
@@ -24,7 +23,7 @@ logging.basicConfig(level=logging.DEBUG)
 sqlite_lock = Lock()
 SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
 BASE_URL = "http://localhost:2000"  # Bisogna cambiarlo con il sito delle queue si mercenari socs che andremo a creare
-qr_img = None
+
 
 def init_sqlite():
     logging.debug("[QUEUES] Acquisizione del lock per SQLite")
@@ -351,18 +350,6 @@ def initialize_queues():
 
 initialize_queues()
 
-# Funzione per generare il QR code
-def generate_qrcode(url):
-    import qrcode
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(url)
-    qr.make(fit=True)
-    return qr.make_image(fill_color="black", back_color="white")
 
 # Aggiungi queste route
 @app.route('/controls/statico')
@@ -412,23 +399,6 @@ def statico_stop():
         else:
             return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Statico.")
     return jsonify(success=False, error="Nessun giocatore Statico in pista.")
-
-@app.route('/qrqueue')
-def qr_queue():
-    queue_url = f"{BASE_URL}/queue"
-    return render_template('qrqueue.html', queue_url=queue_url)
-
-@app.route('/qrqueue_img')
-def qr_queue_img():
-    global qr_img
-    if qr_img is None:
-        queue_url = f"{BASE_URL}/queue"
-        qr_img = generate_qrcode(queue_url)
-    
-    img_io = BytesIO()
-    qr_img.save(img_io, 'PNG')
-    img_io.seek(0)
-    return send_file(img_io, mimetype='image/png')
 
 
 @app.route('/')
@@ -876,8 +846,6 @@ sync_thread.start()
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
 
-    queue_url = f"{BASE_URL}/queue"
-    qr_img = generate_qrcode(queue_url)
 
     # Esegui Flask con il riavvio automatico disabilitato
     app.run(host='0.0.0.0', port=2000, debug=True, use_reloader=False)
