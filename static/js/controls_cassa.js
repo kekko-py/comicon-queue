@@ -1,6 +1,7 @@
 let coupleCounter = 1;
 let singleCounter = 1;
 let charlieCounter = 1;
+let staticoCounter = 1;
 $(document).ready(function () {
     fetchLastPlayerIds(); // Imposta i counter basati sugli ID attuali
     updateDashboard();
@@ -11,7 +12,7 @@ function fetchLastPlayerIds() {
     fetch('/simulate')
         .then(response => response.json())
         .then(data => {
-            let maxCouple = 0, maxSingle = 0, maxCharlie = 0;
+            let maxCouple = 0, maxSingle = 0, maxCharlie = 0, maxStatico = 0;
 
             if (data.couples.length > 0) {
                 let lastCouple = data.couples[data.couples.length - 1];
@@ -28,10 +29,16 @@ function fetchLastPlayerIds() {
                 maxCharlie = parseInt(lastCharlie.id.split(' ')[1]) || 0;
             }
 
+            if (data.statico && data.statico.length > 0) {
+                let lastStatico = data.statico[data.statico.length - 1];
+                maxStatico = parseInt(lastStatico.id.split(' ')[1]) || 0;
+            }
+
             // Imposta i counter al numero successivo
             coupleCounter = maxCouple + 1;
             singleCounter = maxSingle + 1;
             charlieCounter = maxCharlie + 1;
+            staticoCounter = maxStatico + 1;
 
             // Aggiorna i pulsanti con il valore corretto
             document.getElementById('playerId-coppia').value = `${coupleCounter}`;
@@ -42,6 +49,64 @@ function fetchLastPlayerIds() {
         .catch(error => console.error('Errore nel recupero degli ID:', error));
 }
 
+// Aggiungi questo codice per sincronizzare con dashboard.js
+function handleSkip(playerType) {
+    let elementId, endpoint;
+    
+    switch(playerType) {
+        case 'alfa-bravo':
+            elementId = "next-player-alfa-bravo-text";
+            endpoint = "/skip_next_player_alfa_bravo";
+            break;
+        case 'charlie':
+            elementId = "next-charlie-text";
+            endpoint = "/skip_charlie_player";
+            break;
+        case 'statico':
+            elementId = "next-statico-text";
+            endpoint = "/skip_statico_player";
+            break;
+        default:
+            return;
+    }
+
+    const nextPlayer = document.getElementById(elementId).textContent;
+    if (nextPlayer && nextPlayer !== "Nessun Giocatore In Coda" && nextPlayer !== "-") {
+        fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id: nextPlayer }),
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Errore nella chiamata di skip");
+            return response.json();
+        })
+        .then(data => {
+            // Forza l'aggiornamento completo della dashboard
+            updateDashboard();
+            showNotification("Giocatore skippato con successo");
+        })
+        .catch(error => {
+            console.error("Errore durante lo skip:", error);
+            showNotification("Errore durante lo skip del giocatore", true);
+        });
+    }
+}
+
+// Sostituisci le funzioni esistenti con queste
+function skipNextPlayerAlfaBravo() {
+    handleSkip('alfa-bravo');
+}
+
+function skipNextPlayerCharlie() {
+    handleSkip('charlie');
+}
+
+function skipNextPlayerStatico() {
+    handleSkip('statico');
+}
 
 document.getElementById('queueForm-coppia').addEventListener('submit', function (event) {
     event.preventDefault();
@@ -131,13 +196,13 @@ document.getElementById('queueForm-statico').addEventListener('submit', function
     .then(data => {
         if (data.success) {
             showNotification(`${playerName} ${playerId} aggiunto con successo!`);
-            updateDashboard(); // Update the dashboard to reflect the new player
+            updateDashboard();
         } else {
             showNotification('Errore nell\'aggiunta del giocatore.', true);
         }
     });
 
-    document.getElementById('playerId-statico').value = `${Number(document.getElementById('playerId-statico').value)   + 1}`;
+    document.getElementById('playerId-statico').value = `${Number(document.getElementById('playerId-statico').value) + 1}`;
 });
 
 // document.getElementById('add-couple-btn').addEventListener('click', function () {

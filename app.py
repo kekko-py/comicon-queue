@@ -38,7 +38,7 @@ def init_sqlite():
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS queues (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie')) NOT NULL,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie', 'statico')) NOT NULL,
                 player_id TEXT NOT NULL,
                 player_name TEXT NOT NULL,
                 arrival_time DATETIME NOT NULL,
@@ -68,7 +68,7 @@ def init_scoring_table():
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS scoring (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie')) NOT NULL,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie', 'statico')) NOT NULL,
                 player_id TEXT NOT NULL,
                 player_name TEXT NOT NULL,
                 score TEXT NOT NULL,
@@ -96,7 +96,7 @@ def init_skipped_table():
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS skipped_players (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie')) NOT NULL,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie', 'statico')) NOT NULL,
                 player_id TEXT NOT NULL,
                 player_name TEXT NOT NULL,
                 skipped_at DATETIME NOT NULL,
@@ -124,6 +124,7 @@ def load_skipped_from_db():
         backend.skipped_couples.clear()
         backend.skipped_singles.clear()
         backend.skipped_charlie.clear()
+        backend.skipped_statico.clear()
 
         for row in rows:
             player_type, player_id, player_name = row
@@ -135,6 +136,8 @@ def load_skipped_from_db():
                 backend.skipped_singles.append(player_data)
             elif player_type == 'charlie':
                 backend.skipped_charlie.append(player_data)
+            elif player_type == 'statico':
+                backend.skipped_statico.append(player_data)
 
         cursor.close()
         conn.close()
@@ -156,6 +159,7 @@ def load_scores_from_db():
         backend.couple_history_total.clear()
         backend.single_history.clear()
         backend.charlie_history.clear()
+        backend.statico_history.clear()
 
         for row in rows:
             player_type, player_id, player_name, score = row
@@ -171,6 +175,8 @@ def load_scores_from_db():
                     backend.single_history.append(score_minutes)
                 elif player_type == 'charlie':
                     backend.charlie_history.append(score_minutes)
+                elif player_type == 'statico':
+                    backend.statico_history.append(score_minutes)
 
         cursor.close()
         conn.close()
@@ -194,6 +200,7 @@ def load_queues_from_db():
         backend.queue_couples.clear()
         backend.queue_singles.clear()
         backend.queue_charlie.clear()
+        backend.queue_statico.clear()
 
         for row in rows:
             player_type, player_id, player_name, arrival_time = row
@@ -203,6 +210,8 @@ def load_queues_from_db():
                 backend.queue_singles.append({'id': player_id, 'arrival': arrival_time})
             elif player_type == 'charlie':
                 backend.queue_charlie.append({'id': player_id, 'arrival': arrival_time})
+            elif player_type == 'statico':
+                backend.queue_statico.append({'id': player_id, 'arrival': arrival_time})
 
             backend.player_names[player_id] = player_name
 
@@ -215,6 +224,15 @@ def load_queues_from_db():
             backend.next_player_charlie_id = None
             backend.next_player_charlie_name = None
             backend.next_player_charlie_locked = False
+
+        if backend.queue_statico:
+            backend.next_player_statico_id = backend.queue_statico[0]['id']
+            backend.next_player_statico_name = backend.get_player_name(backend.next_player_statico_id)
+            backend.next_player_statico_locked = True
+        else:
+            backend.next_player_statico_id = None
+            backend.next_player_statico_name = None
+            backend.next_player_statico_locked = False
 
         cursor.close()
         conn.close()
@@ -257,6 +275,13 @@ def save_queues_to_db():
                     ('charlie', charlie['id'], backend.get_player_name(charlie['id']), charlie['arrival'])
                 )
 
+            # Salva le code di Statico
+            for statico in backend.queue_statico:
+                cursor.execute(
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
+                    ('statico', statico['id'], backend.get_player_name(statico['id']), statico['arrival'])
+                )
+
             # Salva gli score
             cursor.execute("DELETE FROM scoring")
             for i, score in enumerate(backend.couple_history_total):
@@ -273,6 +298,11 @@ def save_queues_to_db():
                 cursor.execute(
                     "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
                     ('charlie', f"COMPLETATO-{i + 1}", f"COMPLETATO-{i + 1}", backend.format_time(score))
+                )
+            for i, score in enumerate(backend.statico_history):
+                cursor.execute(
+                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
+                    ('statico', f"COMPLETATO-{i + 1}", f"COMPLETATO-{i + 1}", backend.format_time(score))
                 )
 
             # Salva gli skippati
@@ -291,6 +321,11 @@ def save_queues_to_db():
                 cursor.execute(
                     "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) VALUES (?, ?, ?, ?)",
                     ('charlie', player['id'], backend.get_player_name(player['id']), datetime.datetime.now())
+                )
+            for player in backend.skipped_statico:
+                cursor.execute(
+                    "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) VALUES (?, ?, ?, ?)",
+                    ('statico', player['id'], backend.get_player_name(player['id']), datetime.datetime.now())
                 )
 
             conn.commit()
@@ -328,6 +363,55 @@ def generate_qrcode(url):
     qr.add_data(url)
     qr.make(fit=True)
     return qr.make_image(fill_color="black", back_color="white")
+
+# Aggiungi queste route
+@app.route('/controls/statico')
+def controls_statico():
+    return render_template('controls_statico.html')
+
+@app.route('/add_statico', methods=['POST'])
+def add_statico():
+    id = request.json.get('id')
+    name = request.json.get('name')
+    if not id or not name:
+        return jsonify(success=False, error="ID and name are required"), 400
+    statico_id = f"{name.upper()} {int(id):03d}"
+    backend.add_statico_player(statico_id, name)
+    return jsonify(success=True)
+
+@app.route('/skip_statico_player', methods=['POST'])
+def skip_statico_player():
+    player_id = request.json.get('id')
+    if player_id:
+        backend.skip_statico_player(player_id)
+        return jsonify(
+            success=True,
+            next_player_statico_id=backend.next_player_statico_id,
+            next_player_statico_name=backend.next_player_statico_name
+        )
+    return jsonify(success=False, error="Player ID is required"), 400
+
+@app.route('/statico_start', methods=['POST'])
+def statico_start():
+    if not backend.queue_statico:
+        return jsonify(success=False, error="La coda di Statico è vuota. Non è possibile avviare il gioco.")
+    backend.start_statico_game()
+    return jsonify(success=True, current_player_delta=backend.current_player_delta,
+                  current_player_echo=backend.current_player_echo)
+
+@app.route('/statico_stop', methods=['POST'])
+def statico_stop():
+    if backend.current_player_delta or backend.current_player_echo:
+        player_id = backend.current_player_delta['id'] if backend.current_player_delta else backend.current_player_echo['id']
+        now = backend.get_current_time()
+        if player_id and player_id in backend.player_start_times:
+            backend.record_statico_game((now - backend.player_start_times[player_id]).total_seconds() / 60)
+            backend.current_player_delta = None
+            backend.current_player_echo = None
+            return jsonify(success=True)
+        else:
+            return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Statico.")
+    return jsonify(success=False, error="Nessun giocatore Statico in pista.")
 
 @app.route('/qrqueue')
 def qr_queue():
@@ -451,7 +535,7 @@ def queue():
 
 @app.route('/simulate', methods=['GET'])
 def simulate():
-    couples_board, singles_board, charlie_board = backend.get_waiting_board()
+    couples_board, singles_board, charlie_board, statico_board = backend.get_waiting_board()
     next_player_alfa_bravo_id = backend.next_player_alfa_bravo_id
     next_player_charlie_id = backend.next_player_charlie_id
     next_player_charlie_name = backend.next_player_charlie_name
@@ -480,6 +564,15 @@ def simulate():
             'estimated_time': time_est
         })
 
+    # Aggiungo la board per statico
+    formatted_statico_board = []
+    for pos, player_id, time_est in statico_board:
+        formatted_statico_board.append({
+            'id': player_id,
+            'name': backend.get_player_name(player_id),
+            'estimated_time': time_est
+        })    
+
     next_player_alfa_bravo_name = backend.get_player_name(
         next_player_alfa_bravo_id) if next_player_alfa_bravo_id else None
     current_player_alfa = backend.current_player_alfa
@@ -506,10 +599,16 @@ def simulate():
     backend.ALFA_next_available = backend.localize_time(backend.ALFA_next_available)
     backend.BRAVO_next_available = backend.localize_time(backend.BRAVO_next_available)
     backend.CHARLIE_next_available = backend.localize_time(backend.CHARLIE_next_available)
+    backend.DELTA_next_available = backend.localize_time(backend.DELTA_next_available)
+    backend.ECHO_next_available = backend.localize_time(backend.ECHO_next_available)
+
 
     alfa_remaining = max(0, (backend.ALFA_next_available - now).total_seconds() / 60)
     bravo_remaining = max(0, (backend.BRAVO_next_available - now).total_seconds() / 60)
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
+    delta_remaining = max(0, (backend.DELTA_next_available - now).total_seconds() / 60)
+    echo_remaining = max(0, (backend.ECHO_next_available - now).total_seconds() / 60)
+
 
     durations = backend.get_durations()
 
@@ -517,23 +616,34 @@ def simulate():
         couples=formatted_couples_board,
         singles=formatted_singles_board,
         charlie=formatted_charlie_board,
+        statico=formatted_statico_board,
         next_player_alfa_bravo_id=next_player_alfa_bravo_id,
         next_player_alfa_bravo_name=next_player_alfa_bravo_name,
         next_player_charlie_id=next_player_charlie_id,
         next_player_charlie_name=next_player_charlie_name,
+        next_player_statico_id=backend.next_player_statico_id,  # Aggiungiamo
+        next_player_statico_name=backend.next_player_statico_name,  # Aggiungiamo
         current_player_alfa=current_player_alfa,
         current_player_bravo=current_player_bravo,
         current_player_charlie=current_player_charlie,
+        current_player_delta=backend.current_player_delta,  # Aggiungiamo
+        current_player_echo=backend.current_player_echo,  # Aggiungiamo
         player_icon_url=url_for('static', filename='icons/Vector.svg'),
         alfa_status='Occupata' if backend.current_player_alfa else 'Libera',
         bravo_status='Occupata' if backend.current_player_bravo else 'Libera',
         charlie_status='Occupata' if backend.current_player_charlie else 'Libera',
+        delta_status='Occupata' if backend.current_player_delta else 'Libera',  # Aggiungiamo
+        echo_status='Occupata' if backend.current_player_echo else 'Libera',  # Aggiungiamo
         alfa_remaining=f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
         bravo_remaining=f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
         charlie_remaining=f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min",
+        delta_remaining=f"{int(delta_remaining)}min" if delta_remaining > 0 else "0min",  # Aggiungiamo
+        echo_remaining=f"{int(echo_remaining)}min" if echo_remaining > 0 else "0min",  # Aggiungiamo
         alfa_duration=durations.get('alfa', "N/D"),
         bravo_duration=durations.get('bravo', "N/D"),
-        charlie_duration=durations.get('charlie', "N/D")
+        charlie_duration=durations.get('charlie', "N/D"),
+        delta_duration=durations.get('delta', "N/D"),  # Aggiungiamo
+        echo_duration=durations.get('echo', "N/D")  # Aggiungiamo
     )
 
 
@@ -545,7 +655,7 @@ def button_press():
     if button == 'first_start':
         if not backend.queue_couples:
             return jsonify(success=False, error="La coda delle coppie è vuota. Non è possibile avviare il gioco.")
-
+        
         backend.start_game(is_couple=True)
         return jsonify(success=True, start_time=now.isoformat(), current_player_bravo=backend.current_player_bravo,
                        current_player_alfa=backend.current_player_alfa)
@@ -598,6 +708,61 @@ def button_press():
             else:
                 return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Charlie.")
 
+    # Nuovi casi per Statico DELTA e ECHO
+    elif button == 'statico_start_delta':
+        if not backend.queue_statico:
+            return jsonify(success=False, error="La coda di Statico è vuota. Non è possibile avviare il gioco.")
+        if backend.current_player_delta:
+            return jsonify(success=False, error="La pista DELTA è già occupata.")
+        
+        backend.start_statico_game(pista='delta')
+        return jsonify(
+            success=True,
+            current_player_delta=backend.current_player_delta,
+            current_player_echo=None
+        )
+
+    elif button == 'statico_start_echo':
+        if not backend.queue_statico:
+            return jsonify(success=False, error="La coda di Statico è vuota. Non è possibile avviare il gioco.")
+        if backend.current_player_echo:
+            return jsonify(success=False, error="La pista ECHO è già occupata.")
+        
+        backend.start_statico_game(pista='echo')
+        return jsonify(
+            success=True,
+            current_player_delta=None,
+            current_player_echo=backend.current_player_echo
+        )
+
+    elif button == 'statico_stop_delta':
+        if backend.current_player_delta:
+            player_id = backend.current_player_delta.get('id')
+            if player_id and player_id in backend.player_start_times:
+                backend.record_statico_game(
+                    (now - backend.player_start_times[player_id]).total_seconds() / 60,
+                    pista='delta'
+                )
+                backend.current_player_delta = None
+                return jsonify(success=True)
+            else:
+                return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Statico (DELTA).")
+        return jsonify(success=False, error="Nessun giocatore Statico in pista DELTA.")
+
+    elif button == 'statico_stop_echo':
+        if backend.current_player_echo:
+            player_id = backend.current_player_echo.get('id')
+            if player_id and player_id in backend.player_start_times:
+                backend.record_statico_game(
+                    (now - backend.player_start_times[player_id]).total_seconds() / 60,
+                    pista='echo'
+                )
+                backend.current_player_echo = None
+                return jsonify(success=True)
+            else:
+                return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Statico (ECHO).")
+        return jsonify(success=False, error="Nessun giocatore Statico in pista ECHO.")
+
     return jsonify(success=False, error="Pulsante non riconosciuto")
 
 
@@ -606,33 +771,13 @@ def skip_next_player_alfa_bravo():
     player_id = request.json.get('id')
     if player_id:
         backend.skip_player(player_id)
-        is_couple = player_id.startswith("GIALLO")
+        return jsonify(
+            success=True,
+            next_player_alfa_bravo_id=backend.next_player_alfa_bravo_id,
+            next_player_alfa_bravo_name=backend.next_player_alfa_bravo_name
+        )
+    return jsonify(success=False, error="Player ID is required"), 400
 
-        if is_couple and backend.queue_couples:
-            backend.next_player_alfa_bravo_id = backend.queue_couples[0]['id']
-            backend.next_player_alfa_bravo_name = backend.get_player_name(backend.next_player_alfa_bravo_id)
-            backend.next_player_alfa_bravo_locked = True
-        elif not is_couple and backend.queue_singles:
-            backend.next_player_alfa_bravo_id = backend.queue_singles[0]['id']
-            backend.next_player_alfa_bravo_name = backend.get_player_name(backend.next_player_alfa_bravo_id)
-            backend.next_player_alfa_bravo_locked = True
-        else:
-            backend.next_player_alfa_bravo_id = None
-            backend.next_player_alfa_bravo_name = None
-            backend.next_player_alfa_bravo_locked = False
-
-        print(f"Next player: {backend.next_player_alfa_bravo_id}")
-
-    can_start_couple = not backend.single_in_alfa and not backend.couple_in_alfa and backend.queue_couples
-    can_start_single = not backend.single_in_alfa and backend.queue_singles
-
-    return jsonify(
-        success=True,
-        can_start_couple=can_start_couple,
-        can_start_single=can_start_single,
-        next_player_alfa_bravo_id=backend.next_player_alfa_bravo_id,
-        next_player_alfa_bravo_name=backend.next_player_alfa_bravo_name
-    )
 
 
 @app.route('/skip_charlie_player', methods=['POST'])
@@ -640,9 +785,13 @@ def skip_charlie_player():
     player_id = request.json.get('id')
     if player_id:
         backend.skip_charlie_player(player_id)
-        can_start_charlie = not backend.player_in_charlie and backend.queue_charlie
-        return jsonify(success=True, can_start_charlie=can_start_charlie)
+        return jsonify(
+            success=True,
+            next_player_charlie_id=backend.next_player_charlie_id,
+            next_player_charlie_name=backend.next_player_charlie_name
+        )
     return jsonify(success=False, error="Player ID is required"), 400
+
 
 
 @app.route('/get_skipped', methods=['GET'])
@@ -650,7 +799,8 @@ def get_skipped():
     return jsonify({
         'couples': [{'id': c['id']} for c in backend.skipped_couples],
         'singles': [{'id': s['id']} for s in backend.skipped_singles],
-        'charlie': [{'id': p['id']} for p in backend.skipped_charlie]
+        'charlie': [{'id': p['id']} for p in backend.skipped_charlie],
+        'statico': [{'id': p['id']} for p in backend.skipped_statico]
     })
 
 

@@ -50,6 +50,11 @@
     <h2>Classifica Charlie</h2>
     <ul id="charlie-leaderboard"></ul>
   </div>
+
+  <div class="leaderboard">
+    <h2>Classifica Statico</h2>
+    <ul id="statico-leaderboard"></ul>
+  </div>
 </div>
 {% endblock %} {% block scripts %}
 <script>
@@ -66,10 +71,14 @@
         const charlieLeaderboard = document.getElementById(
           "charlie-leaderboard"
         );
+        const staticoLeaderboard = document.getElementById(
+          "statico-leaderboard"
+        );
 
         couplesLeaderboard.innerHTML = "";
         singlesLeaderboard.innerHTML = "";
         charlieLeaderboard.innerHTML = "";
+        staticoLeaderboard.innerHTML = "";
 
         data.couples.forEach((player) => {
           const li = document.createElement("li");
@@ -87,6 +96,11 @@
           const li = document.createElement("li");
           li.textContent = `${player[0]} - ${player[1]}`;
           charlieLeaderboard.appendChild(li);
+        });
+        data.statico.forEach((player) => {
+          const li = document.createElement("li");
+          li.textContent = `${player[0]} - ${player[1]}`;
+          staticoLeaderboard.appendChild(li);
         });
       })
       .catch((error) =>

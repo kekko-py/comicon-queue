@@ -143,3 +143,9 @@
     font-size: 1.2em;
     color: green;
 }
+
+.skipped-button.statico {
+    border-left: 3px solid #f44336; /* Rosso */
+    background-color: #f44336;
+    color: white;
+}

@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/controls_statico.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Controllo STATICO</h1>
+
+<div class="game-info">
+    <div class="current-player">
+        Giocatore in DELTA: <span id="current-player-delta">-</span>
+    </div>
+    <div class="current-player">
+        Giocatore in ECHO: <span id="current-player-echo">-</span>
+    </div>
+    <div class="next-player">
+        Prossimo giocatore: <span id="next-player">-</span>
+    </div>
+    <div class="game-timer">
+        Tempo trascorso DELTA: <span id="timer-delta">00:00</span>
+    </div>
+    <div class="game-timer">
+        Tempo trascorso ECHO: <span id="timer-echo">00:00</span>
+    </div>
+</div>
+
+<div class="control-panel">
+    <button id="next-player-btn" class="btn btn-next" onclick="activateNextPlayer()" disabled>
+        Prossimo Giocatore
+    </button>
+    
+    <div class="track-controls">
+        <div class="track-panel" id="delta-panel">
+            <h3>Pista DELTA</h3>
+            <div class="button-group">
+                <button id="start-delta-btn" class="btn btn-start" onclick="pressButton('statico_start_delta')">START DELTA</button>
+                <button id="stop-delta-btn" class="btn btn-stop" onclick="pressButton('statico_stop_delta')">STOP DELTA</button>
+            </div>
+            <div class="status">
+                Stato: <span id="status-delta">Inattivo</span>
+            </div>
+        </div>
+        
+        <div class="track-panel" id="echo-panel">
+            <h3>Pista ECHO</h3>
+            <div class="button-group">
+                <button id="start-echo-btn" class="btn btn-start" onclick="pressButton('statico_start_echo')">START ECHO</button>
+                <button id="stop-echo-btn" class="btn btn-stop" onclick="pressButton('statico_stop_echo')">STOP ECHO</button>
+            </div>
+            <div class="status">
+                Stato: <span id="status-echo">Inattivo</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/controls_statico.js') }}"></script>
+{% endblock %}
