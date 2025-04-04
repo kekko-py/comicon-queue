@@ -11,9 +11,6 @@
     <div class="current-player">
         Prenotazione in gioco: <span id="current-player">-</span>
     </div>
-    <div class="next-player">
-        Prossimo giocatore: <span id="next-player">-</span>
-    </div>
     <div class="game-timer">
         Tempo trascorso: <span id="timer">00:00</span>
     </div>
@@ -29,6 +26,29 @@
     </div>
     <div class="status">
         Stato: <span id="status">Inattivo</span>
+    </div>
+</div>
+<br>
+<div class="col">
+    <div class="next-players-container">
+       
+      <!-- Card per Charlie -->
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore G&G:</div>
+        <div class="next-player-charlie" id="next-player">
+          Nessun Giocatore In Coda
+        </div>
+        <button class="skip-button" onclick="skipNextPlayerCharlie()">
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="skipped-container">
+    <div class="skipped-title">Giocatori Skippati</div>
+    <div class="skipped-buttons">
+      <div id="skipped-charlie-buttons"></div> <!-- Aggiungi questo div -->
+      </div>
     </div>
 </div>
 {% endblock %}

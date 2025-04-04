@@ -12,13 +12,100 @@ function updateNextPlayer() {
                 $('#next-player-btn').prop('disabled', false);
                 console.log(`Next player to start: ${nextPlayer.id}`);  // Log del prossimo giocatore
             } else {
-                $('#next-player').text('-');
+                $('#next-player').text('Nessun Giocatore In Coda');
                 $('#next-player-btn').prop('disabled', true);
             }
 
             updateTrackStatus(data);
         });
 }
+
+
+function updateSkipped() {
+    fetch("/get_skipped")
+        .then(response => response.json())
+        .then(data => {
+            // Funzione helper per creare i bottoni skippati
+            const createSkippedButtons = (containerId, players, className) => {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.innerHTML = "";
+                    if (players && players.length > 0) {
+                        players.forEach(player => {
+                            const button = document.createElement("button");
+                            button.className = `skipped-button ${className}`;
+                            button.textContent = player.id;
+                            button.onclick = () => restoreSkipped(player.id);
+                            container.appendChild(button);
+                        });
+                    }
+                }
+            };
+  
+            // Aggiorna tutte le sezioni
+            createSkippedButtons("skipped-couples-buttons", data.couples, "couple");
+            createSkippedButtons("skipped-singles-buttons", data.singles, "single");
+            createSkippedButtons("skipped-charlie-buttons", data.charlie, "charlie");
+            createSkippedButtons("skipped-statico-buttons", data.statico, "statico");
+        })
+        .catch(error => {
+            console.error("Errore durante il recupero degli skipped:", error);
+        });
+  }
+
+// Assicurati che la funzione venga chiamata regolarmente
+setInterval(() => {
+    updateSkipped();
+  }, 1000);
+  // Aggiorna la dashboard ogni secondo
+
+  function restoreSkipped(playerId) {
+    console.log("Tentativo di ripristino giocatore:", playerId);
+    $.ajax({
+      url: "/restore_skipped_as_next",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ id: playerId }),
+      success: function (response) {
+        console.log("Giocatore ripristinato con successo:", playerId);
+        console.log("Risposta server:", response);
+        updateBoards();
+      },
+      error: function (error) {
+        console.error("Errore durante il ripristino del giocatore:", error);
+      },
+    });
+  }
+
+// Aggiorna la funzione skipNextPlayerCharlie
+function skipNextPlayerCharlie() {
+    const nextPlayer = document.getElementById("next-player").textContent;
+    if (nextPlayer && nextPlayer !== "Nessun Giocatore In Coda" && nextPlayer !== "-") {
+        fetch("/skip_charlie_player", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ id: nextPlayer }),
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Errore nella chiamata di skip");
+            return response.json();
+        })
+        .then(data => {
+            if (data.next_player_charlie_id) {
+                document.getElementById("next-player").textContent = data.next_player_charlie_id;
+            } else {
+                document.getElementById("next-player").textContent = "Nessun Giocatore In Coda";
+            }
+            updateSkipped();
+            updateBoards();
+        })
+        .catch(error => {
+            console.error("Errore durante lo skip:", error);
+        });
+    }
+  }
 
 function updateTrackStatus(data) {
     const canStart = data.charlie_status === 'Libera';

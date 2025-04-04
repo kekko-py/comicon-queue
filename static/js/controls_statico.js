@@ -53,7 +53,6 @@ setInterval(() => {
       success: function (response) {
         console.log("Giocatore ripristinato con successo:", playerId);
         console.log("Risposta server:", response);
-        updateSkippedList();
         updateBoards();
       },
       error: function (error) {
@@ -71,7 +70,7 @@ function updateNextPlayer() {
                 $('#next-player').text(`${nextPlayer.id}`);
                 $('#next-player-btn').prop('disabled', false);
             } else {
-                $('#next-player').text('-');
+                $('#next-player').text('Nessun Giocatore In Coda');
                 $('#next-player-btn').prop('disabled', true);
             }
 
